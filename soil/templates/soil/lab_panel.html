@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل آزمایشگاه - آباک</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+        }
+        
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .sample-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.2s;
+        }
+        .sample-card:hover {
+            border-color: #2e7d32;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-verified { background: #d1fae5; color: #065f46; }
+        
+        .nav-link {
+            transition: all 0.2s ease;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: #374151;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .nav-link:hover {
+            background: #f0fdf4;
+            color: #166534;
+        }
+        .nav-link.active {
+            background: #dcfce7;
+            color: #166534;
+            font-weight: 600;
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #2e7d32;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            color: #374151;
+            text-decoration: none;
+            width: 100%;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .dropdown-item:hover {
+            background: #f3f4f6;
+        }
+        .dropdown-item i {
+            width: 20px;
+        }
+        .sidebar-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 8px;
+            min-width: 200px;
+            z-index: 50;
+        }
+        .sidebar-menu.open {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+
+        <!-- ==================== هدر یکپارچه ==================== -->
+        <nav class="bg-white rounded-xl shadow-lg p-4 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <!-- لوگو -->
+                <a href="/" class="flex items-center gap-3 hover:opacity-80 transition">
+                    <i class="bi bi-tree-fill text-3xl text-green-700"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold text-green-700">آباک</h1>
+                        <p class="text-xs text-gray-500">سامانه هوشمند تحلیل خاک</p>
+                    </div>
+                </a>
+
+                <!-- منوی اصلی (دسکتاپ) -->
+                <div class="hidden md:flex items-center gap-1 flex-wrap" id="main-menu">
+                    <a href="/map/" class="nav-link">
+                        <i class="bi bi-map"></i> نقشه
+                    </a>
+                    <a href="/dashboard/" class="nav-link">
+                        <i class="bi bi-speedometer2"></i> داشبورد
+                    </a>
+                    <a href="/farms/" class="nav-link">
+                        <i class="bi bi-tree"></i> مزارع
+                    </a>
+                    <a href="/health-chart/" class="nav-link">
+                        <i class="bi bi-graph-up"></i> روند سلامت
+                    </a>
+                    <a href="/expert-request/" class="nav-link">
+                        <i class="bi bi-person-badge"></i> درخواست کارشناس
+                    </a>
+                    <a href="/lab/" class="nav-link active">
+                        <i class="bi bi-flask"></i> آزمایشگاه
+                    </a>
+                    <a href="/verify/" class="nav-link">
+                        <i class="bi bi-check-circle"></i> تأیید
+                    </a>
+                </div>
+
+                <!-- بخش کاربر -->
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <button id="user-menu-btn" class="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-lg transition">
+                            <div class="user-avatar" id="user-avatar">ک</div>
+                            <i class="bi bi-chevron-down text-gray-400 text-sm"></i>
+                        </button>
+                        
+                        <div id="user-dropdown" class="sidebar-menu">
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <div class="font-bold text-gray-800" id="user-name">کاربر</div>
+                                <div class="text-xs text-gray-500" id="user-role">کشاورز</div>
+                            </div>
+                            <a href="/profile/" class="dropdown-item">
+                                <i class="bi bi-person"></i> پروفایل
+                            </a>
+                            <a href="/dashboard/" class="dropdown-item">
+                                <i class="bi bi-speedometer2"></i> داشبورد
+                            </a>
+                            <a href="/subscription/" class="dropdown-item">
+                                <i class="bi bi-credit-card"></i> اشتراک
+                            </a>
+                            <hr class="my-1">
+                            <button id="logout-btn" class="dropdown-item text-red-600 hover:bg-red-50">
+                                <i class="bi bi-box-arrow-left"></i> خروج
+                            </button>
+                        </div>
+                    </div>
+
+                    <button id="mobile-menu-btn" class="md:hidden text-gray-600 hover:text-gray-800 p-2">
+                        <i class="bi bi-list text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- منوی موبایل -->
+            <div id="mobile-menu" class="md:hidden hidden mt-4 pt-4 border-t border-gray-100">
+                <div class="flex flex-col space-y-1" id="mobile-menu-items">
+                    <a href="/map/" class="nav-link block">
+                        <i class="bi bi-map ml-2"></i> نقشه
+                    </a>
+                    <a href="/dashboard/" class="nav-link block">
+                        <i class="bi bi-speedometer2 ml-2"></i> داشبورد
+                    </a>
+                    <a href="/farms/" class="nav-link block">
+                        <i class="bi bi-tree ml-2"></i> مزارع
+                    </a>
+                    <a href="/health-chart/" class="nav-link block">
+                        <i class="bi bi-graph-up ml-2"></i> روند سلامت
+                    </a>
+                    <a href="/expert-request/" class="nav-link block">
+                        <i class="bi bi-person-badge ml-2"></i> درخواست کارشناس
+                    </a>
+                    <a href="/lab/" class="nav-link active block">
+                        <i class="bi bi-flask ml-2"></i> آزمایشگاه
+                    </a>
+                    <a href="/verify/" class="nav-link block">
+                        <i class="bi bi-check-circle ml-2"></i> تأیید
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- ==================== فرم ثبت نمونه ==================== -->
+        <div class="form-section mb-6">
+            <h2 class="text-lg font-bold text-gray-800 mb-4">ثبت نمونه جدید</h2>
+            <form id="lab-form" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+                <!-- اطلاعات اصلی - اجباری -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">کد نمونه *</label>
+                    <input type="text" id="sample_code" required
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                           placeholder="مثلاً: LAB-001">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">تاریخ نمونه‌برداری *</label>
+                    <input type="date" id="sampling_date" required
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">نام آزمایشگاه *</label>
+                    <input type="text" id="laboratory_name" required
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                           placeholder="نام آزمایشگاه">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">عمق (سانتی‌متر)</label>
+                    <input type="number" id="depth" value="30"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+
+                <!-- پارامترهای خاک - اجباری -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">pH *</label>
+                    <input type="number" id="ph" step="0.1" required
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                           placeholder="مثلاً: 7.2">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">EC (dS/m) *</label>
+                    <input type="number" id="ec" step="0.1" required
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                           placeholder="مثلاً: 0.8">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">ماده آلی (%) *</label>
+                    <input type="number" id="organic_matter" step="0.1" required
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                           placeholder="مثلاً: 2.1">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">بافت خاک *</label>
+                    <select id="texture" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        <option value="SANDY">شنی</option>
+                        <option value="LOAMY_SAND">لوم شنی</option>
+                        <option value="SANDY_LOAM">شنی لومی</option>
+                        <option value="LOAM" selected>لوم</option>
+                        <option value="SILT_LOAM">لوم سیلتی</option>
+                        <option value="SILT">سیلتی</option>
+                        <option value="CLAY_LOAM">لوم رسی</option>
+                        <option value="SILTY_CLAY_LOAM">لوم رسی سیلتی</option>
+                        <option value="CLAY">رسی</option>
+                    </select>
+                </div>
+
+                <!-- عناصر غذایی (اختیاری) -->
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">نیتروژن (ppm)</label>
+                    <input type="number" id="nitrogen" step="1"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                           placeholder="اختیاری">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">فسفر (ppm)</label>
+                    <input type="number" id="phosphorus" step="1"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                           placeholder="اختیاری">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">پتاسیم (ppm)</label>
+                    <input type="number" id="potassium" step="1"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                           placeholder="اختیاری">
+                </div>
+
+                <!-- عناصر ریزمغذی (اختیاری) -->
+                <div class="border-t pt-4 mt-2 col-span-1 md:col-span-2">
+                    <h3 class="font-bold text-gray-700 mb-2">🧪 عناصر ریزمغذی (اختیاری)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">آهن (Fe) ppm</label>
+                            <input type="number" id="iron" step="0.1" 
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="اختیاری">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">روی (Zn) ppm</label>
+                            <input type="number" id="zinc" step="0.1" 
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="اختیاری">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">منگنز (Mn) ppm</label>
+                            <input type="number" id="manganese" step="0.1" 
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="اختیاری">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">مس (Cu) ppm</label>
+                            <input type="number" id="copper" step="0.1" 
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="اختیاری">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- اطلاعات مزرعه (اختیاری) -->
+                <div class="col-span-1 md:col-span-2 border-t pt-4 mt-2">
+                    <h3 class="font-bold text-gray-700 mb-2">اطلاعات مزرعه (اختیاری)</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">نام مزرعه</label>
+                            <input type="text" id="farm_name"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                   placeholder="نام مزرعه">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">نام کشاورز</label>
+                            <input type="text" id="farmer_name"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                   placeholder="نام کشاورز">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">شماره موبایل کشاورز</label>
+                            <input type="text" id="farmer_phone"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                   placeholder="۰۹۱۲۳۴۵۶۷۸۹">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">عرض جغرافیایی</label>
+                            <input type="number" id="latitude" step="0.0001"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                   placeholder="مثلاً: 35.6542">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">طول جغرافیایی</label>
+                            <input type="number" id="longitude" step="0.0001"
+                                   class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                                   placeholder="مثلاً: 51.1223">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-span-1 md:col-span-2">
+                    <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-medium">
+                        <i class="bi bi-plus-circle ml-1"></i> ثبت نمونه
+                    </button>
+                </div>
+            </form>
+            <div id="form-message" class="mt-3 hidden"></div>
+        </div>
+
+        <!-- ==================== بخش آپلود انبوه ==================== -->
+        <div class="form-section mt-6">
+            <h2 class="text-lg font-bold text-gray-800 mb-4">📤 آپلود انبوه نمونه‌ها (Excel)</h2>
+            <form id="upload-form" enctype="multipart/form-data" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">فایل Excel (xlsx, xls, csv)</label>
+                    <input type="file" id="excel-file" accept=".xlsx,.xls,.csv" required
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-gray-500 mt-1">
+                        ستون‌های مورد نیاز: sample_code, sampling_date, ph, ec, organic_matter, texture
+                        <br>ستون‌های اختیاری: nitrogen, phosphorus, potassium, iron, zinc, manganese, copper, depth, latitude, longitude, farm_name, address
+                    </p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">نام آزمایشگاه</label>
+                    <input type="text" id="lab-name-bulk"
+                           class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                           placeholder="نام آزمایشگاه">
+                </div>
+                <button type="submit" id="upload-btn" class="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 transition font-medium">
+                    <i class="bi bi-upload ml-1"></i> آپلود و پردازش
+                </button>
+            </form>
+            <div id="upload-progress" class="mt-3 hidden">
+                <div class="bg-gray-200 rounded-full h-2">
+                    <div id="progress-bar" class="bg-green-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                </div>
+                <p id="upload-status" class="text-sm text-gray-600 mt-2">در حال پردازش...</p>
+            </div>
+            <div id="upload-result" class="mt-3 hidden"></div>
+        </div>
+
+        <!-- ==================== لیست نمونه‌ها ==================== -->
+        <div class="form-section mt-6">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-gray-800">📋 نمونه‌های ثبت‌شده</h2>
+                <button id="refresh-samples" class="text-green-600 hover:text-green-700 transition">
+                    <i class="bi bi-arrow-clockwise ml-1"></i> بروزرسانی
+                </button>
+            </div>
+            <div id="samples-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="text-center text-gray-500 py-8">در حال بارگذاری...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== JavaScript ==================== -->
+    <script>
+        // ============================================================
+        // ۰. توابع کمکی
+        // ============================================================
+        function getToken() {
+            return localStorage.getItem('access_token');
+        }
+
+        function redirectToLogin() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            window.location.href = '/login/';
+        }
+
+        function getHeaders() {
+            const token = getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        function getUserInfo() {
+            try {
+                const token = getToken();
+                if (!token) return null;
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return {
+                    username: payload.username || 'کاربر',
+                    role: payload.role || 'کشاورز'
+                };
+            } catch {
+                return null;
+            }
+        }
+
+        // ============================================================
+        // منوها
+        // ============================================================
+        document.getElementById('user-menu-btn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('user-dropdown').classList.toggle('open');
+        });
+
+        document.addEventListener('click', function() {
+            document.getElementById('user-dropdown').classList.remove('open');
+        });
+
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
+        function updateUserUI() {
+            const info = getUserInfo();
+            if (info) {
+                document.getElementById('user-name').textContent = info.username;
+                document.getElementById('user-role').textContent = info.role;
+                document.getElementById('user-avatar').textContent = info.username.charAt(0).toUpperCase();
+            }
+        }
+
+        // ============================================================
+        // خروج
+        // ============================================================
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            if (confirm('آیا مطمئن هستید که می‌خواهید خارج شوید؟')) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                window.location.href = '/login/';
+            }
+        });
+
+        // ============================================================
+        // ۱. بارگذاری لیست نمونه‌ها
+        // ============================================================
+        async function loadSamples() {
+            try {
+                const token = getToken();
+                if (!token) {
+                    redirectToLogin();
+                    return;
+                }
+
+                const response = await fetch('/api/analyses/lab-samples/', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    redirectToLogin();
+                    return;
+                }
+
+                const samples = await response.json();
+
+                const container = document.getElementById('samples-list');
+                if (!samples || samples.length === 0) {
+                    container.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">هیچ نمونه‌ای ثبت نشده است</div>';
+                    return;
+                }
+
+                container.innerHTML = samples.map(sample => `
+                    <div class="sample-card">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-bold text-gray-800">${sample.sample_code}</div>
+                                <div class="text-sm text-gray-600">${sample.farm_name || 'مزرعه نامشخص'}</div>
+                            </div>
+                            <span class="status-badge ${sample.is_verified ? 'status-verified' : 'status-pending'}">
+                                ${sample.is_verified ? '✓ تأیید شده' : '⏳ در انتظار تأیید'}
+                            </span>
+                        </div>
+                        <div class="mt-2 text-sm text-gray-600">
+                            <div>pH: ${sample.ph} | EC: ${sample.ec}</div>
+                            <div>ماده آلی: ${sample.organic_matter}%</div>
+                            <div>بافت: ${sample.texture_display || sample.texture}</div>
+                            ${sample.iron ? `<div>آهن: ${sample.iron} ppm</div>` : ''}
+                            ${sample.zinc ? `<div>روی: ${sample.zinc} ppm</div>` : ''}
+                            <div class="text-xs text-gray-400 mt-1">${sample.sampling_date} | ${sample.laboratory_name || 'نامشخص'}</div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                document.getElementById('samples-list').innerHTML = `
+                    <div class="col-span-full text-center text-red-600 py-8">
+                        خطا در بارگذاری: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // ============================================================
+        // ۲. ثبت نمونه جدید (فرم معمولی)
+        // ============================================================
+        document.getElementById('lab-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const token = getToken();
+            if (!token) {
+                alert('لطفاً ابتدا وارد شوید');
+                redirectToLogin();
+                return;
+            }
+
+            const messageDiv = document.getElementById('form-message');
+            messageDiv.classList.add('hidden');
+
+            const getValue = (id) => {
+                const val = document.getElementById(id).value.trim();
+                return val === '' ? null : val;
+            };
+            const getNumber = (id) => {
+                const val = document.getElementById(id).value.trim();
+                return val === '' ? null : parseFloat(val);
+            };
+
+            const data = {
+                sample_code: getValue('sample_code'),
+                sampling_date: getValue('sampling_date'),
+                laboratory_name: getValue('laboratory_name'),
+                depth: getNumber('depth') || 30,
+                ph: getNumber('ph'),
+                ec: getNumber('ec'),
+                organic_matter: getNumber('organic_matter'),
+                texture: document.getElementById('texture').value,
+                nitrogen: getNumber('nitrogen'),
+                phosphorus: getNumber('phosphorus'),
+                potassium: getNumber('potassium'),
+                iron: getNumber('iron'),
+                zinc: getNumber('zinc'),
+                manganese: getNumber('manganese'),
+                copper: getNumber('copper'),
+                farm_name: getValue('farm_name'),
+                farmer_name: getValue('farmer_name'),
+                farmer_phone: getValue('farmer_phone'),
+                latitude: getNumber('latitude'),
+                longitude: getNumber('longitude'),
+            };
+
+            try {
+                const response = await fetch('/api/analyses/lab-register/', {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                if (response.status === 401) {
+                    redirectToLogin();
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    messageDiv.className = 'mt-3 p-3 bg-green-100 text-green-700 rounded-lg';
+                    messageDiv.textContent = `✅ ${result.message}`;
+                    messageDiv.classList.remove('hidden');
+
+                    document.getElementById('lab-form').reset();
+                    document.getElementById('depth').value = '30';
+
+                    loadSamples();
+                } else {
+                    let errorMsg = result.error || 'خطا در ثبت نمونه';
+                    if (result.details) {
+                        const details = Object.entries(result.details)
+                            .map(([key, errors]) => `${key}: ${errors.join(', ')}`)
+                            .join(' | ');
+                        errorMsg += ` (${details})`;
+                    }
+                    messageDiv.className = 'mt-3 p-3 bg-red-100 text-red-700 rounded-lg';
+                    messageDiv.textContent = `❌ ${errorMsg}`;
+                    messageDiv.classList.remove('hidden');
+                }
+            } catch (error) {
+                messageDiv.className = 'mt-3 p-3 bg-red-100 text-red-700 rounded-lg';
+                messageDiv.textContent = `❌ خطا: ${error.message}`;
+                messageDiv.classList.remove('hidden');
+            }
+        });
+
+        // ============================================================
+        // ۳. آپلود فایل Excel
+        // ============================================================
+        document.getElementById('upload-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const token = getToken();
+            if (!token) {
+                alert('لطفاً ابتدا وارد شوید');
+                redirectToLogin();
+                return;
+            }
+
+            const fileInput = document.getElementById('excel-file');
+            const labName = document.getElementById('lab-name-bulk').value.trim() || 'آزمایشگاه';
+            const resultDiv = document.getElementById('upload-result');
+            const progressDiv = document.getElementById('upload-progress');
+            const statusDiv = document.getElementById('upload-status');
+            const progressBar = document.getElementById('progress-bar');
+            const uploadBtn = document.getElementById('upload-btn');
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('لطفاً یک فایل انتخاب کنید');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('laboratory_name', labName);
+
+            progressDiv.classList.remove('hidden');
+            resultDiv.classList.add('hidden');
+            uploadBtn.disabled = true;
+            uploadBtn.innerHTML = '<i class="bi bi-hourglass-split ml-1"></i> در حال آپلود...';
+            progressBar.style.width = '30%';
+            statusDiv.textContent = 'در حال آپلود فایل...';
+
+            try {
+                const response = await fetch('/api/analyses/upload-bulk/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: formData
+                });
+
+                if (response.status === 401) {
+                    redirectToLogin();
+                    return;
+                }
+
+                progressBar.style.width = '80%';
+                statusDiv.textContent = 'در حال پردازش داده‌ها...';
+
+                const result = await response.json();
+
+                progressBar.style.width = '100%';
+
+                if (result.success) {
+                    statusDiv.textContent = 'پردازش کامل شد!';
+                    resultDiv.className = 'mt-3 p-4 bg-green-50 border border-green-200 rounded-lg';
+                    resultDiv.innerHTML = `
+                        <div class="text-green-700 font-bold">✅ ${result.message}</div>
+                        <div class="mt-2 text-sm text-gray-600">
+                            <div>تعداد نمونه‌های ثبت‌شده: ${result.results.success_count}</div>
+                            <div>تعداد خطاها: ${result.results.error_count}</div>
+                            ${result.results.errors.length > 0 ? `
+                                <div class="mt-2">
+                                    <div class="font-medium text-red-600">خطاها:</div>
+                                    <ul class="pr-4 text-sm list-disc">
+                                        ${result.results.errors.slice(0, 10).map(err => `
+                                            <li>سطر ${err.row}: ${err.sample_code} - ${err.errors.join(', ')}</li>
+                                        `).join('')}
+                                        ${result.results.errors.length > 10 ? `<li>و ${result.results.errors.length - 10} خطای دیگر...</li>` : ''}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                    resultDiv.classList.remove('hidden');
+
+                    loadSamples();
+
+                } else {
+                    throw new Error(result.error || 'خطا در آپلود');
+                }
+
+            } catch (error) {
+                progressBar.style.width = '100%';
+                statusDiv.textContent = 'خطا!';
+                resultDiv.className = 'mt-3 p-4 bg-red-50 border border-red-200 rounded-lg';
+                resultDiv.innerHTML = `
+                    <div class="text-red-700 font-bold">❌ خطا</div>
+                    <div class="mt-2 text-sm text-gray-600">${error.message}</div>
+                `;
+                resultDiv.classList.remove('hidden');
+            } finally {
+                uploadBtn.disabled = false;
+                uploadBtn.innerHTML = '<i class="bi bi-upload ml-1"></i> آپلود و پردازش';
+                setTimeout(() => {
+                    progressBar.style.width = '0%';
+                    progressDiv.classList.add('hidden');
+                }, 3000);
+            }
+        });
+
+        // ============================================================
+        // ۴. دکمه بروزرسانی
+        // ============================================================
+        document.getElementById('refresh-samples').addEventListener('click', loadSamples);
+
+        // ============================================================
+        // ۵. بارگذاری اولیه + بررسی توکن
+        // ============================================================
+        (function init() {
+            const token = getToken();
+            if (!token) {
+                redirectToLogin();
+                return;
+            }
+            updateUserUI();
+            loadSamples();
+        })();
+    </script>
+</body>
+</html>

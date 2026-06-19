@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل تأیید نمونه‌ها - آباک</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+        }
+        
+        .sample-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s;
+            background: white;
+        }
+        .sample-card:hover {
+            border-color: #2e7d32;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .sample-card.warning {
+            border-right: 4px solid #f59e0b;
+        }
+        .sample-card.critical {
+            border-right: 4px solid #ef4444;
+        }
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-pending { background: #fef3c7; color: #92400e; }
+        .badge-verified { background: #d1fae5; color: #065f46; }
+        .badge-rejected { background: #fee2e2; color: #991b1b; }
+        .btn-action {
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-verify { background: #2e7d32; color: white; }
+        .btn-verify:hover { background: #1b5e20; }
+        .btn-reject { background: #dc2626; color: white; }
+        .btn-reject:hover { background: #b91c1c; }
+        .btn-view { background: #3b82f6; color: white; }
+        .btn-view:hover { background: #2563eb; }
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .stat-card {
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .stat-number {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .nav-link {
+            transition: all 0.2s ease;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: #374151;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .nav-link:hover {
+            background: #f0fdf4;
+            color: #166534;
+        }
+        .nav-link.active {
+            background: #dcfce7;
+            color: #166534;
+            font-weight: 600;
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #2e7d32;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            color: #374151;
+            text-decoration: none;
+            width: 100%;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .dropdown-item:hover {
+            background: #f3f4f6;
+        }
+        .dropdown-item i {
+            width: 20px;
+        }
+        .sidebar-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 8px;
+            min-width: 200px;
+            z-index: 50;
+        }
+        .sidebar-menu.open {
+            display: block;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        
+        <!-- ==================== هدر یکپارچه ==================== -->
+        <nav class="bg-white rounded-xl shadow-lg p-4 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <!-- لوگو -->
+                <a href="/" class="flex items-center gap-3 hover:opacity-80 transition">
+                    <i class="bi bi-tree-fill text-3xl text-green-700"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold text-green-700">آباک</h1>
+                        <p class="text-xs text-gray-500">سامانه هوشمند تحلیل خاک</p>
+                    </div>
+                </a>
+
+                <!-- منوی اصلی (دسکتاپ) -->
+                <div class="hidden md:flex items-center gap-1 flex-wrap" id="main-menu">
+                    <a href="/map/" class="nav-link">
+                        <i class="bi bi-map"></i> نقشه
+                    </a>
+                    <a href="/dashboard/" class="nav-link">
+                        <i class="bi bi-speedometer2"></i> داشبورد
+                    </a>
+                    <a href="/farms/" class="nav-link">
+                        <i class="bi bi-tree"></i> مزارع
+                    </a>
+                    <a href="/health-chart/" class="nav-link">
+                        <i class="bi bi-graph-up"></i> روند سلامت
+                    </a>
+                    <a href="/expert-request/" class="nav-link">
+                        <i class="bi bi-person-badge"></i> درخواست کارشناس
+                    </a>
+                    <a href="/lab/" class="nav-link">
+                        <i class="bi bi-flask"></i> آزمایشگاه
+                    </a>
+                    <a href="/verify/" class="nav-link active">
+                        <i class="bi bi-check-circle"></i> تأیید
+                    </a>
+                </div>
+
+                <!-- بخش کاربر -->
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <button id="user-menu-btn" class="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-lg transition">
+                            <div class="user-avatar" id="user-avatar">ک</div>
+                            <i class="bi bi-chevron-down text-gray-400 text-sm"></i>
+                        </button>
+                        
+                        <div id="user-dropdown" class="sidebar-menu">
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <div class="font-bold text-gray-800" id="user-name">کاربر</div>
+                                <div class="text-xs text-gray-500" id="user-role">کشاورز</div>
+                            </div>
+                            <a href="/profile/" class="dropdown-item">
+                                <i class="bi bi-person"></i> پروفایل
+                            </a>
+                            <a href="/dashboard/" class="dropdown-item">
+                                <i class="bi bi-speedometer2"></i> داشبورد
+                            </a>
+                            <a href="/subscription/" class="dropdown-item">
+                                <i class="bi bi-credit-card"></i> اشتراک
+                            </a>
+                            <hr class="my-1">
+                            <button id="logout-btn" class="dropdown-item text-red-600 hover:bg-red-50">
+                                <i class="bi bi-box-arrow-left"></i> خروج
+                            </button>
+                        </div>
+                    </div>
+
+                    <button id="mobile-menu-btn" class="md:hidden text-gray-600 hover:text-gray-800 p-2">
+                        <i class="bi bi-list text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- منوی موبایل -->
+            <div id="mobile-menu" class="md:hidden hidden mt-4 pt-4 border-t border-gray-100">
+                <div class="flex flex-col space-y-1" id="mobile-menu-items">
+                    <a href="/map/" class="nav-link block">
+                        <i class="bi bi-map ml-2"></i> نقشه
+                    </a>
+                    <a href="/dashboard/" class="nav-link block">
+                        <i class="bi bi-speedometer2 ml-2"></i> داشبورد
+                    </a>
+                    <a href="/farms/" class="nav-link block">
+                        <i class="bi bi-tree ml-2"></i> مزارع
+                    </a>
+                    <a href="/health-chart/" class="nav-link block">
+                        <i class="bi bi-graph-up ml-2"></i> روند سلامت
+                    </a>
+                    <a href="/expert-request/" class="nav-link block">
+                        <i class="bi bi-person-badge ml-2"></i> درخواست کارشناس
+                    </a>
+                    <a href="/lab/" class="nav-link block">
+                        <i class="bi bi-flask ml-2"></i> آزمایشگاه
+                    </a>
+                    <a href="/verify/" class="nav-link active block">
+                        <i class="bi bi-check-circle ml-2"></i> تأیید
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- ==================== آمار ==================== -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="stats-container">
+            <div class="stat-card">
+                <div class="text-sm text-gray-500">مجموع</div>
+                <div class="stat-number text-gray-800" id="total-count">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="text-sm text-gray-500">در انتظار تأیید</div>
+                <div class="stat-number text-yellow-600" id="pending-count">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="text-sm text-gray-500">تأیید شده</div>
+                <div class="stat-number text-green-600" id="verified-count">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="text-sm text-gray-500">رد شده</div>
+                <div class="stat-number text-red-600" id="rejected-count">0</div>
+            </div>
+        </div>
+
+        <!-- ==================== لیست نمونه‌ها ==================== -->
+        <div id="samples-container">
+            <div class="text-center text-gray-500 py-12">در حال بارگذاری...</div>
+        </div>
+    </div>
+
+    <!-- ==================== مودال تأیید ==================== -->
+    <div id="verify-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h2 class="text-lg font-bold text-gray-800 mb-4">تأیید نمونه</h2>
+            <p class="text-sm text-gray-600 mb-4">آیا از تأیید این نمونه اطمینان دارید؟</p>
+            <div class="bg-gray-50 p-3 rounded-lg mb-4">
+                <div id="verify-sample-info" class="text-sm"></div>
+            </div>
+            <div class="flex gap-3">
+                <button id="confirm-verify" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">
+                    <i class="bi bi-check-circle ml-1"></i> تأیید
+                </button>
+                <button id="cancel-verify" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition">
+                    انصراف
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== مودال رد ==================== -->
+    <div id="reject-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h2 class="text-lg font-bold text-gray-800 mb-4">رد نمونه</h2>
+            <p class="text-sm text-gray-600 mb-2">لطفاً دلیل رد را وارد کنید:</p>
+            <textarea id="reject-reason" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4" placeholder="مثلاً: pH نامعتبر، داده‌های ناقص، ..."></textarea>
+            <div class="flex gap-3">
+                <button id="confirm-reject" class="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition">
+                    <i class="bi bi-x-circle ml-1"></i> رد
+                </button>
+                <button id="cancel-reject" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition">
+                    انصراف
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== مودال جزئیات ==================== -->
+    <div id="details-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h2 class="text-lg font-bold text-gray-800 mb-4">📋 جزئیات نمونه</h2>
+            <div id="details-content" class="space-y-2 text-sm">
+                <div class="text-center text-gray-500">در حال بارگذاری...</div>
+            </div>
+            <div class="mt-4 flex justify-end">
+                <button id="close-details" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition">
+                    بستن
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // ۰. توابع کمکی
+        // ============================================================
+        function getToken() {
+            return localStorage.getItem('access_token');
+        }
+
+        function redirectToLogin() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            window.location.href = '/login/';
+        }
+
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            };
+        }
+
+        function getUserInfo() {
+            try {
+                const token = getToken();
+                if (!token) return null;
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return {
+                    username: payload.username || 'کاربر',
+                    role: payload.role || 'کشاورز'
+                };
+            } catch {
+                return null;
+            }
+        }
+
+        let currentSampleId = null;
+
+        // ============================================================
+        // منوها
+        // ============================================================
+        document.getElementById('user-menu-btn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('user-dropdown').classList.toggle('open');
+        });
+
+        document.addEventListener('click', function() {
+            document.getElementById('user-dropdown').classList.remove('open');
+        });
+
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
+        function updateUserUI() {
+            const info = getUserInfo();
+            if (info) {
+                document.getElementById('user-name').textContent = info.username;
+                document.getElementById('user-role').textContent = info.role;
+                document.getElementById('user-avatar').textContent = info.username.charAt(0).toUpperCase();
+            }
+        }
+
+        // ============================================================
+        // خروج
+        // ============================================================
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            if (confirm('آیا مطمئن هستید که می‌خواهید خارج شوید؟')) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                window.location.href = '/login/';
+            }
+        });
+
+        // ============================================================
+        // بارگذاری آمار
+        // ============================================================
+        async function loadStats() {
+            try {
+                const token = getToken();
+                if (!token) {
+                    redirectToLogin();
+                    return;
+                }
+
+                const response = await fetch('/api/analyses/verification-stats/', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.status === 401) {
+                    redirectToLogin();
+                    return;
+                }
+
+                const stats = await response.json();
+                
+                document.getElementById('total-count').textContent = stats.total || 0;
+                document.getElementById('pending-count').textContent = stats.pending || 0;
+                document.getElementById('verified-count').textContent = stats.verified || 0;
+                document.getElementById('rejected-count').textContent = stats.rejected || 0;
+            } catch (error) {
+                console.error('خطا در بارگذاری آمار:', error);
+            }
+        }
+
+        // ============================================================
+        // بارگذاری لیست نمونه‌ها
+        // ============================================================
+        async function loadSamples() {
+            try {
+                const token = getToken();
+                if (!token) {
+                    redirectToLogin();
+                    return;
+                }
+
+                const response = await fetch('/api/analyses/pending-verification/', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.status === 401) {
+                    redirectToLogin();
+                    return;
+                }
+
+                const data = await response.json();
+                const container = document.getElementById('samples-container');
+
+                // ============ بررسی اینکه data آرایه است ============
+                if (!data || !Array.isArray(data)) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-12 bg-white rounded-lg">
+                            <i class="bi bi-inbox text-4xl"></i>
+                            <p class="mt-2">هیچ نمونه‌ای در انتظار تأیید نیست</p>
+                        </div>
+                    `;
+                    document.getElementById('pending-count').textContent = '0';
+                    return;
+                }
+
+                if (data.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-12 bg-white rounded-lg">
+                            <i class="bi bi-check-circle text-4xl text-green-500"></i>
+                            <p class="mt-2">همه نمونه‌ها تأیید شده‌اند</p>
+                        </div>
+                    `;
+                    document.getElementById('pending-count').textContent = '0';
+                    return;
+                }
+
+                const pending = data.filter(s => !s.is_verified && !s.rejection_reason).length;
+                document.getElementById('pending-count').textContent = pending;
+
+                container.innerHTML = data.map(sample => {
+                    const warnings = sample.validation_warnings || [];
+                    const hasWarnings = warnings.length > 0;
+                    const hasCritical = warnings.some(w => w.includes('نامعتبر') || w.includes('خارج از محدوده'));
+                    
+                    let cardClass = 'sample-card';
+                    if (hasCritical) cardClass += ' critical';
+                    else if (hasWarnings) cardClass += ' warning';
+                    
+                    let statusBadge = '';
+                    if (sample.is_verified) {
+                        statusBadge = '<span class="badge badge-verified">✓ تأیید شده</span>';
+                    } else if (sample.rejection_reason) {
+                        statusBadge = '<span class="badge badge-rejected">✗ رد شده</span>';
+                    } else {
+                        statusBadge = '<span class="badge badge-pending">⏳ در انتظار</span>';
+                    }
+                    
+                    return `
+                        <div class="${cardClass} mb-4">
+                            <div class="flex justify-between items-start">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="font-bold text-gray-800">${sample.sample_code}</span>
+                                        ${statusBadge}
+                                    </div>
+                                    <div class="text-sm text-gray-600 mt-1">${sample.farm_name || 'مزرعه نامشخص'}</div>
+                                    <div class="text-xs text-gray-400">${sample.sampling_date} | ${sample.laboratory_name || 'نامشخص'}</div>
+                                </div>
+                                <div class="text-sm text-gray-600 text-left">
+                                    <div>pH: ${sample.ph}</div>
+                                    <div>EC: ${sample.ec}</div>
+                                    <div>OM: ${sample.organic_matter}%</div>
+                                </div>
+                            </div>
+                            
+                            ${hasWarnings ? `
+                                <div class="mt-2 p-2 ${hasCritical ? 'bg-red-50 border border-red-200' : 'bg-yellow-50 border border-yellow-200'} rounded-lg">
+                                    <div class="text-sm font-medium ${hasCritical ? 'text-red-700' : 'text-yellow-700'}">
+                                        <i class="bi bi-exclamation-triangle ml-1"></i> هشدارها:
+                                    </div>
+                                    <ul class="text-sm text-gray-600 mt-1 pr-4">
+                                        ${warnings.map(w => `<li>• ${w}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                            
+                            ${sample.rejection_reason ? `
+                                <div class="mt-2 p-2 bg-red-50 border border-red-200 rounded-lg">
+                                    <div class="text-sm font-medium text-red-700">دلیل رد:</div>
+                                    <div class="text-sm text-gray-600">${sample.rejection_reason}</div>
+                                </div>
+                            ` : ''}
+                            
+                            <div class="flex gap-2 mt-3 flex-wrap">
+                                ${!sample.is_verified && !sample.rejection_reason ? `
+                                    <button class="btn-action btn-verify" onclick="openVerifyModal(${sample.id}, '${sample.sample_code}')">
+                                        <i class="bi bi-check-circle ml-1"></i> تأیید
+                                    </button>
+                                    <button class="btn-action btn-reject" onclick="openRejectModal(${sample.id})">
+                                        <i class="bi bi-x-circle ml-1"></i> رد
+                                    </button>
+                                ` : ''}
+                                <button class="btn-action btn-view" onclick="viewDetails(${sample.id})">
+                                    <i class="bi bi-eye ml-1"></i> مشاهده
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('Error loading samples:', error);
+                document.getElementById('samples-container').innerHTML = `
+                    <div class="text-center text-red-600 py-12 bg-white rounded-lg">
+                        <i class="bi bi-exclamation-triangle text-4xl"></i>
+                        <p class="mt-2">خطا در بارگذاری: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ============================================================
+        // بارگذاری همه (آمار + لیست)
+        // ============================================================
+        async function loadAll() {
+            await loadStats();
+            await loadSamples();
+        }
+
+        // ============================================================
+        // مشاهده جزئیات
+        // ============================================================
+        async function viewDetails(sampleId) {
+            try {
+                const token = getToken();
+                if (!token) {
+                    redirectToLogin();
+                    return;
+                }
+
+                const response = await fetch(`/api/analyses/${sampleId}/details/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.status === 401) {
+                    redirectToLogin();
+                    return;
+                }
+
+                const data = await response.json();
+                
+                const content = document.getElementById('details-content');
+                
+                let analysisHtml = '';
+                if (data.analysis) {
+                    analysisHtml = `
+                        <div class="mt-3 p-3 bg-green-50 rounded-lg">
+                            <div class="font-bold text-green-700">تحلیل خاک</div>
+                            <div>شاخص سلامت: ${data.analysis.soil_health_index}%</div>
+                            <div>سطح: ${data.analysis.soil_health_level}</div>
+                            <div>عملکرد پیش‌بینی: ${data.analysis.expected_yield} تن/هکتار</div>
+                            <div>سود پیش‌بینی: ${Number(data.analysis.expected_profit).toLocaleString()} تومان/هکتار</div>
+                            ${data.analysis.recommended_crops ? `
+                                <div class="mt-2">
+                                    <div class="font-medium">محصولات پیشنهادی:</div>
+                                    <ul class="pr-4">
+                                        ${data.analysis.recommended_crops.map(c => `<li>• ${c.name} (امتیاز: ${c.score}%)</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                }
+                
+                content.innerHTML = `
+                    <div class="grid grid-cols-2 gap-2">
+                        <div><span class="text-gray-500">کد نمونه:</span> <strong>${data.sample_code}</strong></div>
+                        <div><span class="text-gray-500">مزرعه:</span> <strong>${data.farm_name || 'نامشخص'}</strong></div>
+                        <div><span class="text-gray-500">تاریخ نمونه‌برداری:</span> <strong>${data.sampling_date}</strong></div>
+                        <div><span class="text-gray-500">عمق:</span> <strong>${data.depth} سانتی‌متر</strong></div>
+                        <div><span class="text-gray-500">pH:</span> <strong>${data.ph}</strong></div>
+                        <div><span class="text-gray-500">EC:</span> <strong>${data.ec} dS/m</strong></div>
+                        <div><span class="text-gray-500">ماده آلی:</span> <strong>${data.organic_matter}%</strong></div>
+                        <div><span class="text-gray-500">بافت:</span> <strong>${data.texture_display || data.texture}</strong></div>
+                        ${data.nitrogen ? `<div><span class="text-gray-500">نیتروژن:</span> <strong>${data.nitrogen} ppm</strong></div>` : ''}
+                        ${data.phosphorus ? `<div><span class="text-gray-500">فسفر:</span> <strong>${data.phosphorus} ppm</strong></div>` : ''}
+                        ${data.potassium ? `<div><span class="text-gray-500">پتاسیم:</span> <strong>${data.potassium} ppm</strong></div>` : ''}
+                        <div class="col-span-2"><span class="text-gray-500">آزمایشگاه:</span> <strong>${data.laboratory_name || 'نامشخص'}</strong></div>
+                        <div class="col-span-2"><span class="text-gray-500">منبع:</span> <strong>${data.source}</strong></div>
+                        ${data.is_verified ? `<div class="col-span-2"><span class="text-green-600">✓ تأیید شده</span></div>` : ''}
+                        ${data.rejection_reason ? `<div class="col-span-2"><span class="text-red-600">✗ رد شده: ${data.rejection_reason}</span></div>` : ''}
+                    </div>
+                    ${analysisHtml}
+                `;
+                
+                document.getElementById('details-modal').classList.add('active');
+                
+            } catch (error) {
+                alert('خطا در دریافت جزئیات: ' + error.message);
+            }
+        }
+
+        function openVerifyModal(sampleId, sampleCode) {
+            currentSampleId = sampleId;
+            document.getElementById('verify-sample-info').innerHTML = `
+                <strong>${sampleCode}</strong>
+                <span class="text-gray-500">|</span>
+                آیا از تأیید این نمونه اطمینان دارید؟
+            `;
+            document.getElementById('verify-modal').classList.add('active');
+        }
+
+        function openRejectModal(sampleId) {
+            currentSampleId = sampleId;
+            document.getElementById('reject-reason').value = '';
+            document.getElementById('reject-modal').classList.add('active');
+        }
+
+        // ============================================================
+        // تأیید
+        // ============================================================
+        document.getElementById('confirm-verify').addEventListener('click', async function() {
+            if (!currentSampleId) return;
+            
+            const token = getToken();
+            if (!token) {
+                redirectToLogin();
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/analyses/${currentSampleId}/verify/`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ notes: 'تأیید خودکار توسط کارشناس' })
+                });
+                
+                if (response.status === 401) {
+                    redirectToLogin();
+                    return;
+                }
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert(`✅ ${result.message}`);
+                    document.getElementById('verify-modal').classList.remove('active');
+                    loadAll();
+                } else {
+                    alert(`❌ ${result.error}`);
+                }
+            } catch (error) {
+                alert(`❌ خطا: ${error.message}`);
+            }
+        });
+
+        // ============================================================
+        // رد
+        // ============================================================
+        document.getElementById('confirm-reject').addEventListener('click', async function() {
+            if (!currentSampleId) return;
+            
+            const reason = document.getElementById('reject-reason').value.trim();
+            if (!reason) {
+                alert('لطفاً دلیل رد را وارد کنید');
+                return;
+            }
+            
+            const token = getToken();
+            if (!token) {
+                redirectToLogin();
+                return;
+            }
+            
+            try {
+                const response = await fetch(`/api/analyses/${currentSampleId}/reject/`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ reason: reason })
+                });
+                
+                if (response.status === 401) {
+                    redirectToLogin();
+                    return;
+                }
+                
+                const result = await response.json();
+                if (result.success) {
+                    alert(`✅ ${result.message}`);
+                    document.getElementById('reject-modal').classList.remove('active');
+                    loadAll();
+                } else {
+                    alert(`❌ ${result.error}`);
+                }
+            } catch (error) {
+                alert(`❌ خطا: ${error.message}`);
+            }
+        });
+
+        // ============================================================
+        // بستن مودال‌ها
+        // ============================================================
+        document.getElementById('cancel-verify').addEventListener('click', function() {
+            document.getElementById('verify-modal').classList.remove('active');
+        });
+        document.getElementById('cancel-reject').addEventListener('click', function() {
+            document.getElementById('reject-modal').classList.remove('active');
+        });
+        document.getElementById('close-details').addEventListener('click', function() {
+            document.getElementById('details-modal').classList.remove('active');
+        });
+
+        // ============================================================
+        // بروزرسانی
+        // ============================================================
+        document.getElementById('refresh-btn').addEventListener('click', function() {
+            this.disabled = true;
+            this.innerHTML = '<i class="bi bi-arrow-clockwise ml-1 animate-spin"></i> در حال بروزرسانی...';
+            loadAll().finally(() => {
+                this.disabled = false;
+                this.innerHTML = '<i class="bi bi-arrow-clockwise ml-1"></i> بروزرسانی';
+            });
+        });
+
+        // ============================================================
+        // بارگذاری اولیه
+        // ============================================================
+        (function init() {
+            const token = getToken();
+            if (!token) {
+                redirectToLogin();
+                return;
+            }
+            updateUserUI();
+            loadAll();
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>درخواست کارشناس - آباک</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+        }
+        
+        .request-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s;
+            background: white;
+        }
+        .request-card:hover {
+            border-color: #2e7d32;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-accepted { background: #dbeafe; color: #1e40af; }
+        .status-in_progress { background: #d1fae5; color: #065f46; }
+        .status-completed { background: #d1fae5; color: #065f46; }
+        .status-rejected { background: #fee2e2; color: #991b1b; }
+        
+        .nav-link {
+            transition: all 0.2s ease;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: #374151;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .nav-link:hover {
+            background: #f0fdf4;
+            color: #166534;
+        }
+        .nav-link.active {
+            background: #dcfce7;
+            color: #166534;
+            font-weight: 600;
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #2e7d32;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            color: #374151;
+            text-decoration: none;
+            width: 100%;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .dropdown-item:hover {
+            background: #f3f4f6;
+        }
+        .dropdown-item i {
+            width: 20px;
+        }
+        .sidebar-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 8px;
+            min-width: 200px;
+            z-index: 50;
+        }
+        .sidebar-menu.open {
+            display: block;
+        }
+        
+        .no-farm-message {
+            background: #fef3c7;
+            border: 1px solid #fcd34d;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .form-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        
+        <!-- ==================== هدر یکپارچه ==================== -->
+        <nav class="bg-white rounded-xl shadow-lg p-4 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <!-- لوگو -->
+                <a href="/" class="flex items-center gap-3 hover:opacity-80 transition">
+                    <i class="bi bi-tree-fill text-3xl text-green-700"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold text-green-700">آباک</h1>
+                        <p class="text-xs text-gray-500">سامانه هوشمند تحلیل خاک</p>
+                    </div>
+                </a>
+
+                <!-- منوی اصلی (دسکتاپ) - توسط JavaScript پر می‌شود -->
+                <div class="hidden md:flex items-center gap-1 flex-wrap" id="main-menu"></div>
+
+                <!-- بخش کاربر -->
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <button id="user-menu-btn" class="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-lg transition">
+                            <div class="user-avatar" id="user-avatar">ک</div>
+                            <i class="bi bi-chevron-down text-gray-400 text-sm"></i>
+                        </button>
+                        
+                        <div id="user-dropdown" class="sidebar-menu">
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <div class="font-bold text-gray-800" id="user-name">کاربر</div>
+                                <div class="text-xs text-gray-500" id="user-role">کشاورز</div>
+                            </div>
+                            <a href="/profile/" class="dropdown-item">
+                                <i class="bi bi-person"></i> پروفایل
+                            </a>
+                            <a href="/dashboard/" class="dropdown-item">
+                                <i class="bi bi-speedometer2"></i> داشبورد
+                            </a>
+                            <a href="/subscription/" class="dropdown-item">
+                                <i class="bi bi-credit-card"></i> اشتراک
+                            </a>
+                            <hr class="my-1">
+                            <button id="logout-btn" class="dropdown-item text-red-600 hover:bg-red-50">
+                                <i class="bi bi-box-arrow-left"></i> خروج
+                            </button>
+                        </div>
+                    </div>
+
+                    <button id="mobile-menu-btn" class="md:hidden text-gray-600 hover:text-gray-800 p-2">
+                        <i class="bi bi-list text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- منوی موبایل -->
+            <div id="mobile-menu" class="md:hidden hidden mt-4 pt-4 border-t border-gray-100">
+                <div class="flex flex-col space-y-1" id="mobile-menu-items"></div>
+            </div>
+        </nav>
+
+        <!-- ==================== پیام عدم وجود مزرعه ==================== -->
+        <div id="no-farm-message" class="no-farm-message hidden">
+            <div class="flex items-center gap-3">
+                <i class="bi bi-exclamation-triangle text-2xl text-yellow-600"></i>
+                <div>
+                    <p class="text-yellow-700 font-medium">شما هیچ مزرعه‌ای ثبت نکرده‌اید!</p>
+                    <p class="text-yellow-600 text-sm">
+                        برای ثبت درخواست کارشناس، ابتدا یک مزرعه ثبت کنید.
+                        <a href="/map/" class="text-green-600 font-bold hover:underline">ثبت مزرعه جدید</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== فرم ثبت درخواست جدید ==================== -->
+        <div class="form-section mb-6">
+            <h2 class="text-lg font-bold text-gray-800 mb-4">ثبت درخواست جدید</h2>
+            <form id="request-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">مزرعه *</label>
+                    <select id="farm-select" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                        <option value="">انتخاب مزرعه...</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">عنوان درخواست *</label>
+                    <input type="text" id="title" required placeholder="مثلاً: نیاز به مشاوره کوددهی"
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">توضیحات *</label>
+                    <textarea id="description" rows="4" required placeholder="شرح کامل درخواست..."
+                              class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent"></textarea>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">تاریخ ترجیحی</label>
+                        <input type="date" id="preferred_date"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ساعت ترجیحی</label>
+                        <input type="time" id="preferred_time"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">عرض جغرافیایی</label>
+                        <input type="number" id="latitude" step="0.0001"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="اختیاری">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">طول جغرافیایی</label>
+                        <input type="number" id="longitude" step="0.0001"
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="اختیاری">
+                    </div>
+                </div>
+                <button type="submit" id="submit-request-btn" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-medium">
+                    <i class="bi bi-send ml-1"></i> ثبت درخواست
+                </button>
+            </form>
+            <div id="form-message" class="mt-3 hidden"></div>
+        </div>
+
+        <!-- ==================== لیست درخواست‌های من ==================== -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-lg font-bold text-gray-800 mb-4">📋 درخواست‌های من</h2>
+            <div id="requests-list">
+                <div class="text-center text-gray-500 py-8">در حال بارگذاری...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+
+        // ============================================================
+        // ۰. توابع کمکی
+        // ============================================================
+        function getToken() {
+            return localStorage.getItem('access_token');
+        }
+
+        function getHeaders() {
+            const token = getToken();
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            };
+        }
+
+        function getUserInfo() {
+            try {
+                const token = getToken();
+                if (!token) return null;
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return {
+                    username: payload.username || 'کاربر',
+                    role: payload.role || 'کشاورز'
+                };
+            } catch {
+                return null;
+            }
+        }
+
+        // ============================================================
+        // منوی مبتنی بر نقش
+        // ============================================================
+        function getMenuItems(role) {
+            const allMenus = {
+                'FARMER': [
+                    { url: '/map/', icon: 'bi-map', label: 'نقشه' },
+                    { url: '/dashboard/', icon: 'bi-speedometer2', label: 'داشبورد' },
+                    { url: '/farms/', icon: 'bi-tree', label: 'مزارع' },
+                    { url: '/health-chart/', icon: 'bi-graph-up', label: 'روند سلامت' },
+                    { url: '/expert-request/', icon: 'bi-person-badge', label: 'درخواست کارشناس' },
+                ],
+                'EXPERT': [
+                    { url: '/verify/', icon: 'bi-check-circle', label: 'تأیید نمونه' },
+                    { url: '/expert-request/', icon: 'bi-person-badge', label: 'درخواست‌ها' },
+                    { url: '/dashboard/', icon: 'bi-speedometer2', label: 'داشبورد' },
+                ],
+                'LAB': [
+                    { url: '/lab/', icon: 'bi-flask', label: 'ثبت نمونه' },
+                    { url: '/dashboard/', icon: 'bi-speedometer2', label: 'داشبورد' },
+                ],
+                'CRM': [
+                    { url: '/expert-request/', icon: 'bi-person-badge', label: 'درخواست‌ها' },
+                    { url: '/dashboard/', icon: 'bi-speedometer2', label: 'داشبورد' },
+                ],
+                'ADMIN': [
+                    { url: '/map/', icon: 'bi-map', label: 'نقشه' },
+                    { url: '/dashboard/', icon: 'bi-speedometer2', label: 'داشبورد' },
+                    { url: '/farms/', icon: 'bi-tree', label: 'مزارع' },
+                    { url: '/health-chart/', icon: 'bi-graph-up', label: 'روند سلامت' },
+                    { url: '/expert-request/', icon: 'bi-person-badge', label: 'درخواست کارشناس' },
+                    { url: '/lab/', icon: 'bi-flask', label: 'آزمایشگاه' },
+                    { url: '/verify/', icon: 'bi-check-circle', label: 'تأیید' },
+                ],
+            };
+            return allMenus[role] || allMenus['FARMER'];
+        }
+
+        function loadMenu() {
+            const role = getUserInfo()?.role || 'FARMER';
+            const menuItems = getMenuItems(role);
+            
+            const mainMenu = document.getElementById('main-menu');
+            const mobileMenu = document.getElementById('mobile-menu-items');
+            
+            if (mainMenu) {
+                mainMenu.innerHTML = menuItems.map(item => `
+                    <a href="${item.url}" class="nav-link ${window.location.pathname === item.url ? 'active' : ''}">
+                        <i class="bi ${item.icon}"></i> ${item.label}
+                    </a>
+                `).join('');
+            }
+            
+            if (mobileMenu) {
+                mobileMenu.innerHTML = menuItems.map(item => `
+                    <a href="${item.url}" class="nav-link block ${window.location.pathname === item.url ? 'active' : ''}">
+                        <i class="bi ${item.icon} ml-2"></i> ${item.label}
+                    </a>
+                `).join('');
+            }
+        }
+
+        // ============================================================
+        // بررسی دسترسی به صفحه
+        // ============================================================
+        function checkPageAccess() {
+            const role = getUserInfo()?.role || 'FARMER';
+            const currentPath = window.location.pathname;
+            
+            const rolePages = {
+                'FARMER': ['/', '/map/', '/dashboard/', '/farms/', '/health-chart/', '/expert-request/', '/profile/', '/subscription/'],
+                'EXPERT': ['/', '/verify/', '/expert-request/', '/profile/', '/dashboard/'],
+                'LAB': ['/', '/lab/', '/profile/', '/dashboard/'],
+                'CRM': ['/', '/expert-request/', '/profile/', '/dashboard/'],
+                'ADMIN': ['/', '/map/', '/dashboard/', '/farms/', '/health-chart/', '/expert-request/', '/lab/', '/verify/', '/profile/', '/subscription/'],
+            };
+            
+            const allowedPages = rolePages[role] || rolePages['FARMER'];
+            
+            if (!allowedPages.includes(currentPath)) {
+                const redirectMap = {
+                    'FARMER': '/map/',
+                    'EXPERT': '/verify/',
+                    'LAB': '/lab/',
+                    'CRM': '/expert-request/',
+                    'ADMIN': '/',
+                };
+                window.location.href = redirectMap[role] || '/';
+                return false;
+            }
+            return true;
+        }
+
+        // ============================================================
+        // منوها
+        // ============================================================
+        document.getElementById('user-menu-btn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('user-dropdown').classList.toggle('open');
+        });
+
+        document.addEventListener('click', function() {
+            document.getElementById('user-dropdown').classList.remove('open');
+        });
+
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
+        function updateUserUI() {
+            const info = getUserInfo();
+            if (info) {
+                document.getElementById('user-name').textContent = info.username;
+                document.getElementById('user-role').textContent = info.role;
+                document.getElementById('user-avatar').textContent = info.username.charAt(0).toUpperCase();
+            }
+        }
+
+        // ============================================================
+        // خروج
+        // ============================================================
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            if (confirm('آیا مطمئن هستید که می‌خواهید خارج شوید؟')) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                window.location.href = '/login/';
+            }
+        });
+
+        // ============================================================
+        // بارگذاری مزارع
+        // ============================================================
+        async function loadFarms() {
+            try {
+                const token = getToken();
+                if (!token) {
+                    window.location.href = '/login/';
+                    return;
+                }
+
+                const response = await fetch(`${API_BASE}/farms/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.status === 401) {
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+                    window.location.href = '/login/';
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error('خطا در دریافت مزارع');
+                }
+
+                let farms = await response.json();
+                
+                if (farms.results && Array.isArray(farms.results)) {
+                    farms = farms.results;
+                } else if (!Array.isArray(farms)) {
+                    farms = [];
+                }
+
+                const select = document.getElementById('farm-select');
+                const noFarmMsg = document.getElementById('no-farm-message');
+                const submitBtn = document.getElementById('submit-request-btn');
+
+                if (!farms || farms.length === 0) {
+                    select.innerHTML = '<option value="">هیچ مزرعه‌ای ثبت نشده است</option>';
+                    noFarmMsg.classList.remove('hidden');
+                    submitBtn.disabled = true;
+                    submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                    return;
+                }
+
+                noFarmMsg.classList.add('hidden');
+                submitBtn.disabled = false;
+                submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+                select.innerHTML = '<option value="">انتخاب مزرعه...</option>';
+                farms.forEach(farm => {
+                    const option = document.createElement('option');
+                    option.value = farm.id;
+                    const areaText = farm.area_display || `${farm.area} هکتار`;
+                    option.textContent = `${farm.name} (${areaText})`;
+                    select.appendChild(option);
+                });
+
+            } catch (error) {
+                console.error('Error loading farms:', error);
+                document.getElementById('farm-select').innerHTML = '<option value="">خطا در بارگذاری مزارع</option>';
+            }
+        }
+
+        // ============================================================
+        // بارگذاری درخواست‌ها
+        // ============================================================
+        async function loadRequests() {
+            try {
+                const token = getToken();
+                if (!token) {
+                    window.location.href = '/login/';
+                    return;
+                }
+
+                const response = await fetch(`${API_BASE}/analyses/my-requests/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.status === 401) {
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+                    window.location.href = '/login/';
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error('خطا در دریافت درخواست‌ها');
+                }
+
+                const requests = await response.json();
+                const container = document.getElementById('requests-list');
+
+                if (!requests || !Array.isArray(requests) || requests.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-8">
+                            <i class="bi bi-inbox text-3xl"></i>
+                            <p class="mt-2">هیچ درخواستی ثبت نشده است</p>
+                            <p class="text-sm text-gray-400">برای ثبت درخواست، فرم بالا را پر کنید.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = requests.map(req => `
+                    <div class="request-card mb-4">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-bold text-gray-800">${req.title}</div>
+                                <div class="text-sm text-gray-600">${req.farm_name}</div>
+                            </div>
+                            <span class="status-badge status-${req.status.toLowerCase()}">
+                                ${req.status_display}
+                            </span>
+                        </div>
+                        <div class="mt-2 text-sm text-gray-600">
+                            <p>${req.description}</p>
+                            ${req.expert_name ? `<div class="mt-1 text-green-600">کارشناس: ${req.expert_name}</div>` : ''}
+                            ${req.expert_response ? `<div class="mt-1 text-blue-600">پاسخ: ${req.expert_response}</div>` : ''}
+                            <div class="text-xs text-gray-400 mt-1">${new Date(req.created_at).toLocaleDateString('fa-IR')}</div>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading requests:', error);
+                document.getElementById('requests-list').innerHTML = `
+                    <div class="text-center text-red-600 py-8">
+                        <i class="bi bi-exclamation-triangle text-2xl"></i>
+                        <p class="mt-2">خطا در بارگذاری درخواست‌ها</p>
+                    </div>
+                `;
+            }
+        }
+
+        // ============================================================
+        // ثبت درخواست جدید
+        // ============================================================
+        document.getElementById('request-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const token = getToken();
+            if (!token) {
+                alert('لطفاً وارد شوید');
+                window.location.href = '/login/';
+                return;
+            }
+
+            const messageDiv = document.getElementById('form-message');
+            messageDiv.classList.add('hidden');
+
+            const data = {
+                farm: parseInt(document.getElementById('farm-select').value),
+                title: document.getElementById('title').value.trim(),
+                description: document.getElementById('description').value.trim(),
+                preferred_date: document.getElementById('preferred_date').value || null,
+                preferred_time: document.getElementById('preferred_time').value || null,
+                latitude: parseFloat(document.getElementById('latitude').value) || null,
+                longitude: parseFloat(document.getElementById('longitude').value) || null,
+            };
+
+            if (!data.farm) {
+                messageDiv.className = 'mt-3 p-3 bg-red-100 text-red-700 rounded-lg';
+                messageDiv.textContent = '❌ لطفاً یک مزرعه انتخاب کنید';
+                messageDiv.classList.remove('hidden');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/analyses/expert-request/`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify(data)
+                });
+
+                if (response.status === 401) {
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+                    window.location.href = '/login/';
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    messageDiv.className = 'mt-3 p-3 bg-green-100 text-green-700 rounded-lg';
+                    messageDiv.textContent = '✅ ' + result.message;
+                    messageDiv.classList.remove('hidden');
+
+                    document.getElementById('title').value = '';
+                    document.getElementById('description').value = '';
+                    document.getElementById('preferred_date').value = '';
+                    document.getElementById('preferred_time').value = '';
+                    document.getElementById('latitude').value = '';
+                    document.getElementById('longitude').value = '';
+                    document.getElementById('farm-select').value = '';
+
+                    loadRequests();
+                } else {
+                    throw new Error(result.error || 'خطا در ثبت درخواست');
+                }
+            } catch (error) {
+                messageDiv.className = 'mt-3 p-3 bg-red-100 text-red-700 rounded-lg';
+                messageDiv.textContent = '❌ ' + error.message;
+                messageDiv.classList.remove('hidden');
+            }
+        });
+
+        // ============================================================
+        // بارگذاری اولیه
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = getToken();
+            if (!token) {
+                window.location.href = '/login/';
+                return;
+            }
+            
+            // بررسی دسترسی
+            if (!checkPageAccess()) return;
+            
+            // بارگذاری منو
+            loadMenu();
+            
+            // به‌روزرسانی اطلاعات کاربر
+            updateUserUI();
+            
+            loadFarms();
+            loadRequests();
+        });
+    </script>
+</body>
+</html>

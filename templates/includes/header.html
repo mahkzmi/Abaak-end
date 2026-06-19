@@ -1,0 +1,61 @@
+<!-- بخش منوی اصلی (دسکتاپ) -->
+<div class="hidden md:flex items-center gap-1 flex-wrap" id="main-menu">
+    <!-- منو توسط JavaScript تولید می‌شود -->
+</div>
+
+<!-- بخش منوی موبایل -->
+<div id="mobile-menu" class="md:hidden hidden mt-4 pt-4 border-t border-gray-100">
+    <div class="flex flex-col space-y-1" id="mobile-menu-items">
+        <!-- منو توسط JavaScript تولید می‌شود -->
+    </div>
+</div>
+
+// ============================================================
+// بارگذاری منو بر اساس نقش
+// ============================================================
+function loadMenu() {
+    const role = getUserRole();
+    if (!role) return;
+
+    const menuItems = getMenuItems(role);
+    const mainMenu = document.getElementById('main-menu');
+    const mobileMenu = document.getElementById('mobile-menu-items');
+
+    if (mainMenu) {
+        mainMenu.innerHTML = menuItems.map(item => `
+            <a href="${item.url}" class="nav-link ${window.location.pathname === item.url ? 'active' : ''}">
+                <i class="bi ${item.icon}"></i> ${item.label}
+            </a>
+        `).join('');
+    }
+
+    if (mobileMenu) {
+        mobileMenu.innerHTML = menuItems.map(item => `
+            <a href="${item.url}" class="nav-link block ${window.location.pathname === item.url ? 'active' : ''}">
+                <i class="bi ${item.icon} ml-2"></i> ${item.label}
+            </a>
+        `).join('');
+    }
+}
+
+// ============================================================
+// بارگذاری اولیه
+// ============================================================
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const token = getToken();
+    if (!token) {
+        window.location.href = '/login/';
+        return;
+    }
+
+    // بررسی دسترسی به صفحه
+    if (!checkPageAccess()) return;
+
+    // بارگذاری منو
+    loadMenu();
+
+    // به‌روزرسانی اطلاعات کاربر
+    updateUserUI();
+});
+</script>

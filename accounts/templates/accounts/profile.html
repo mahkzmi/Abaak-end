@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پروفایل کاربری - آباک</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+        }
+        
+        .profile-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 20px;
+            border: 1px solid #f3f4f6;
+            transition: all 0.3s ease;
+        }
+        .profile-section:hover {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+        .section-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            color: #6b7280;
+            font-weight: 500;
+        }
+        .info-value {
+            color: #1f2937;
+            font-weight: 500;
+        }
+        .farm-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 16px;
+            transition: all 0.2s;
+            background: white;
+        }
+        .farm-card:hover {
+            border-color: #2e7d32;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transform: translateY(-2px);
+        }
+        
+        .nav-link {
+            transition: all 0.2s ease;
+            padding: 8px 16px;
+            border-radius: 8px;
+            color: #374151;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .nav-link:hover {
+            background: #f0fdf4;
+            color: #166534;
+        }
+        .nav-link.active {
+            background: #dcfce7;
+            color: #166534;
+            font-weight: 600;
+        }
+        
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #2e7d32;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+        }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            color: #374151;
+            text-decoration: none;
+            width: 100%;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .dropdown-item:hover {
+            background: #f3f4f6;
+        }
+        .dropdown-item i {
+            width: 20px;
+        }
+        .sidebar-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background: white;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 8px;
+            min-width: 200px;
+            z-index: 50;
+        }
+        .sidebar-menu.open {
+            display: block;
+        }
+        
+        .btn-primary {
+            background: #2e7d32;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-primary:hover {
+            background: #1b5e20;
+        }
+        .btn-outline {
+            background: transparent;
+            color: #2e7d32;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 14px;
+            border: 1px solid #2e7d32;
+            cursor: pointer;
+        }
+        .btn-outline:hover {
+            background: #f0fdf4;
+        }
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-danger:hover {
+            background: #b91c1c;
+        }
+        .btn-blue {
+            background: #2563eb;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-blue:hover {
+            background: #1d4ed8;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8">
+        
+        <!-- ==================== هدر یکپارچه ==================== -->
+        <nav class="bg-white rounded-xl shadow-lg p-4 mb-6">
+            <div class="flex flex-wrap items-center justify-between gap-4">
+                <a href="/" class="flex items-center gap-3 hover:opacity-80 transition">
+                    <i class="bi bi-tree-fill text-3xl text-green-700"></i>
+                    <div>
+                        <h1 class="text-2xl font-bold text-green-700">آباک</h1>
+                        <p class="text-xs text-gray-500">سامانه هوشمند تحلیل خاک</p>
+                    </div>
+                </a>
+
+                <div class="hidden md:flex items-center gap-1 flex-wrap" id="main-menu">
+                    <a href="/map/" class="nav-link"><i class="bi bi-map"></i> نقشه</a>
+                    <a href="/dashboard/" class="nav-link"><i class="bi bi-speedometer2"></i> داشبورد</a>
+                    <a href="/farms/" class="nav-link"><i class="bi bi-tree"></i> مزارع</a>
+                    <a href="/health-chart/" class="nav-link"><i class="bi bi-graph-up"></i> روند سلامت</a>
+                    <a href="/expert-request/" class="nav-link"><i class="bi bi-person-badge"></i> درخواست کارشناس</a>
+                    <a href="/lab/" class="nav-link"><i class="bi bi-flask"></i> آزمایشگاه</a>
+                    <a href="/verify/" class="nav-link"><i class="bi bi-check-circle"></i> تأیید</a>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <button id="user-menu-btn" class="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-lg transition">
+                            <div class="user-avatar" id="user-avatar">ک</div>
+                            <i class="bi bi-chevron-down text-gray-400 text-sm"></i>
+                        </button>
+                        <div id="user-dropdown" class="sidebar-menu">
+                            <div class="px-4 py-3 border-b border-gray-100">
+                                <div class="font-bold text-gray-800" id="user-name">کاربر</div>
+                                <div class="text-xs text-gray-500" id="user-role">کشاورز</div>
+                            </div>
+                            <a href="/profile/" class="dropdown-item"><i class="bi bi-person"></i> پروفایل</a>
+                            <a href="/dashboard/" class="dropdown-item"><i class="bi bi-speedometer2"></i> داشبورد</a>
+                            <a href="/subscription/" class="dropdown-item"><i class="bi bi-credit-card"></i> اشتراک</a>
+                            <hr class="my-1">
+                            <button id="logout-btn" class="dropdown-item text-red-600 hover:bg-red-50">
+                                <i class="bi bi-box-arrow-left"></i> خروج
+                            </button>
+                        </div>
+                    </div>
+                    <button id="mobile-menu-btn" class="md:hidden text-gray-600 hover:text-gray-800 p-2">
+                        <i class="bi bi-list text-2xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div id="mobile-menu" class="md:hidden hidden mt-4 pt-4 border-t border-gray-100">
+                <div class="flex flex-col space-y-1" id="mobile-menu-items">
+                    <a href="/map/" class="nav-link block"><i class="bi bi-map ml-2"></i> نقشه</a>
+                    <a href="/dashboard/" class="nav-link block"><i class="bi bi-speedometer2 ml-2"></i> داشبورد</a>
+                    <a href="/farms/" class="nav-link block"><i class="bi bi-tree ml-2"></i> مزارع</a>
+                    <a href="/health-chart/" class="nav-link block"><i class="bi bi-graph-up ml-2"></i> روند سلامت</a>
+                    <a href="/expert-request/" class="nav-link block"><i class="bi bi-person-badge ml-2"></i> درخواست کارشناس</a>
+                    <a href="/lab/" class="nav-link block"><i class="bi bi-flask ml-2"></i> آزمایشگاه</a>
+                    <a href="/verify/" class="nav-link block"><i class="bi bi-check-circle ml-2"></i> تأیید</a>
+                </div>
+            </div>
+        </nav>
+
+        <!-- ==================== محتوای اصلی ==================== -->
+        <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-green-700">👤 پروفایل کاربری</h1>
+                <p class="text-gray-600 text-sm">مدیریت اطلاعات و مشاهده فعالیت‌ها</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <a href="/dashboard/" class="btn-blue">
+                    <i class="bi bi-speedometer2 ml-1"></i> داشبورد
+                </a>
+                <a href="/" class="btn-primary">
+                    <i class="bi bi-house ml-1"></i> خانه
+                </a>
+                <button id="logout-btn" class="btn-danger">
+                    <i class="bi bi-box-arrow-left ml-1"></i> خروج
+                </button>
+            </div>
+        </div>
+
+        <!-- ==================== اطلاعات پروفایل ==================== -->
+        <div class="profile-section">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="section-title border-none mb-0 pb-0">اطلاعات شخصی</h2>
+                <button id="edit-profile-btn" class="btn-blue text-sm">
+                    <i class="bi bi-pencil ml-1"></i> ویرایش
+                </button>
+            </div>
+            <div id="profile-info" class="space-y-1">
+                <div class="info-row">
+                    <span class="info-label">نام کامل</span>
+                    <span class="info-value" id="full-name">---</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">نام کاربری</span>
+                    <span class="info-value" id="username">---</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">ایمیل</span>
+                    <span class="info-value" id="email">---</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">شماره موبایل</span>
+                    <span class="info-value" id="phone">---</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">نقش</span>
+                    <span class="info-value" id="role">---</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">وضعیت تأیید</span>
+                    <span class="info-value" id="verification-status">---</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ==================== فرم ویرایش ==================== -->
+        <div id="edit-form" class="profile-section" style="display: none;">
+            <h2 class="section-title">✏️ ویرایش اطلاعات</h2>
+            <form id="profile-edit-form" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">نام</label>
+                        <input type="text" id="edit-first-name" 
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">نام خانوادگی</label>
+                        <input type="text" id="edit-last-name" 
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ایمیل</label>
+                        <input type="email" id="edit-email" 
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">شماره موبایل</label>
+                        <input type="text" id="edit-phone" 
+                               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                    </div>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                    <button type="submit" class="btn-primary">
+                        <i class="bi bi-save ml-1"></i> ذخیره
+                    </button>
+                    <button type="button" id="cancel-edit" class="btn-outline">
+                        انصراف
+                    </button>
+                </div>
+            </form>
+            <div id="edit-message" class="mt-3 hidden"></div>
+        </div>
+
+        <!-- ==================== وضعیت اشتراک ==================== -->
+        <div class="profile-section" id="subscription-section">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="section-title border-none mb-0 pb-0">💳 وضعیت اشتراک</h2>
+                <button id="upgrade-subscription-btn" class="btn-primary text-sm">
+                    <i class="bi bi-arrow-up-circle ml-1"></i> ارتقاء
+                </button>
+            </div>
+            <div id="subscription-info">
+                <div class="text-center text-gray-500 py-4">در حال بارگذاری...</div>
+            </div>
+        </div>
+
+        <!-- ==================== مزارع کاربر ==================== -->
+        <div class="profile-section">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="section-title border-none mb-0 pb-0">🌾 مزارع من</h2>
+                <a href="/map/" class="btn-primary text-sm">
+                    <i class="bi bi-plus-circle ml-1"></i> مزرعه جدید
+                </a>
+            </div>
+            <div id="farms-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="text-center text-gray-500 py-8 col-span-full">در حال بارگذاری...</div>
+            </div>
+        </div>
+
+        <!-- ==================== تاریخچه تحلیل‌ها ==================== -->
+        <div class="profile-section">
+            <h2 class="section-title">📊 تاریخچه تحلیل‌ها</h2>
+            <div id="analyses-list">
+                <div class="text-center text-gray-500 py-8">در حال بارگذاری...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+
+        // ============================================================
+        // ۰. توابع کمکی
+        // ============================================================
+        function getToken() {
+            return localStorage.getItem('access_token');
+        }
+
+        function getUserInfo() {
+            try {
+                const token = getToken();
+                if (!token) return null;
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return {
+                    username: payload.username || 'کاربر',
+                    role: payload.role || 'کشاورز'
+                };
+            } catch {
+                return null;
+            }
+        }
+
+        // ============================================================
+        // منوها
+        // ============================================================
+        document.getElementById('user-menu-btn').addEventListener('click', function(e) {
+            e.stopPropagation();
+            document.getElementById('user-dropdown').classList.toggle('open');
+        });
+
+        document.addEventListener('click', function() {
+            document.getElementById('user-dropdown').classList.remove('open');
+        });
+
+        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
+        function updateUserUI() {
+            const info = getUserInfo();
+            if (info) {
+                document.getElementById('user-name').textContent = info.username;
+                document.getElementById('user-role').textContent = info.role;
+                document.getElementById('user-avatar').textContent = info.username.charAt(0).toUpperCase();
+            }
+        }
+
+        // ============================================================
+        // خروج
+        // ============================================================
+        document.getElementById('logout-btn').addEventListener('click', function() {
+            if (confirm('آیا مطمئن هستید که می‌خواهید خارج شوید؟')) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                window.location.href = '/login/';
+            }
+        });
+
+        // ============================================================
+        // بارگذاری اطلاعات پروفایل
+        // ============================================================
+        async function loadProfile() {
+            try {
+                const token = getToken();
+                if (!token) {
+                    window.location.href = '/login/';
+                    return;
+                }
+
+                const response = await fetch(`${API_BASE}/profile/detail/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.status === 401) {
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+                    window.location.href = '/login/';
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error('خطا در دریافت اطلاعات');
+                }
+
+                const data = await response.json();
+                displayProfile(data);
+                await loadSubscription();
+                loadFarms();
+                loadAnalyses();
+
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById('profile-info').innerHTML = `
+                    <div class="text-red-600">خطا در بارگذاری اطلاعات: ${error.message}</div>
+                `;
+            }
+        }
+
+        function displayProfile(data) {
+            document.getElementById('full-name').textContent = data.full_name || '---';
+            document.getElementById('username').textContent = data.username || '---';
+            document.getElementById('email').textContent = data.email || '---';
+            document.getElementById('phone').textContent = data.phone || '---';
+            document.getElementById('role').textContent = data.role_display || '---';
+            
+            const statusEl = document.getElementById('verification-status');
+            if (data.is_verified) {
+                statusEl.innerHTML = '<span class="text-green-600 font-bold">✓ تأیید شده</span>';
+            } else {
+                statusEl.innerHTML = '<span class="text-yellow-600 font-bold">⏳ در انتظار تأیید</span>';
+            }
+
+            document.getElementById('edit-first-name').value = data.first_name || '';
+            document.getElementById('edit-last-name').value = data.last_name || '';
+            document.getElementById('edit-email').value = data.email || '';
+            document.getElementById('edit-phone').value = data.phone || '';
+        }
+
+        // ============================================================
+        // بارگذاری وضعیت اشتراک
+        // ============================================================
+        async function loadSubscription() {
+            try {
+                const token = getToken();
+                const response = await fetch(`${API_BASE}/subscriptions/my/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    throw new Error('خطا در دریافت وضعیت اشتراک');
+                }
+
+                const data = await response.json();
+                const container = document.getElementById('subscription-info');
+                
+                let statusColor = 'text-green-600';
+                let statusBg = 'bg-green-50';
+                if (data.status === 'EXPIRED') {
+                    statusColor = 'text-red-600';
+                    statusBg = 'bg-red-50';
+                } else if (data.status === 'CANCELLED') {
+                    statusColor = 'text-gray-600';
+                    statusBg = 'bg-gray-50';
+                }
+                
+                container.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="${statusBg} p-4 rounded-lg text-center border border-gray-100">
+                            <div class="text-sm text-gray-500">طرح فعلی</div>
+                            <div class="text-xl font-bold text-green-700">${data.plan_name || 'رایگان'}</div>
+                        </div>
+                        <div class="${statusBg} p-4 rounded-lg text-center border border-gray-100">
+                            <div class="text-sm text-gray-500">تحلیل‌های باقی‌مانده</div>
+                            <div class="text-xl font-bold ${data.analyses_remaining > 0 ? 'text-blue-600' : 'text-red-600'}">
+                                ${data.analyses_remaining !== undefined ? data.analyses_remaining : 'نامحدود'}
+                            </div>
+                        </div>
+                        <div class="${statusBg} p-4 rounded-lg text-center border border-gray-100">
+                            <div class="text-sm text-gray-500">وضعیت</div>
+                            <div class="text-xl font-bold ${statusColor}">${data.status_display || 'فعال'}</div>
+                        </div>
+                    </div>
+                    ${data.end_date ? `
+                        <div class="mt-3 text-sm text-gray-500 text-center">
+                            اعتبار تا: ${new Date(data.end_date).toLocaleDateString('fa-IR')}
+                        </div>
+                    ` : ''}
+                    ${data.plan_type === 'ENTERPRISE' ? `
+                        <div class="mt-2 text-sm text-amber-600 text-center font-bold">
+                            ⭐ طرح سازمانی - تحلیل نامحدود
+                        </div>
+                    ` : ''}
+                `;
+            } catch (error) {
+                console.error('Error loading subscription:', error);
+                document.getElementById('subscription-info').innerHTML = `
+                    <div class="text-center text-red-600 py-4">خطا در بارگذاری وضعیت اشتراک</div>
+                `;
+            }
+        }
+
+        // ============================================================
+        // بارگذاری مزارع
+        // ============================================================
+        async function loadFarms() {
+            try {
+                const token = getToken();
+                const response = await fetch(`${API_BASE}/profile/farms/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('خطا در دریافت مزارع');
+
+                let farms = await response.json();
+                
+                // اگر results وجود داشت ازش استفاده کن
+                if (farms.results && Array.isArray(farms.results)) {
+                    farms = farms.results;
+                } else if (!Array.isArray(farms)) {
+                    farms = [];
+                }
+
+                const container = document.getElementById('farms-list');
+
+                if (!farms || farms.length === 0) {
+                    container.innerHTML = `
+                        <div class="col-span-full text-center text-gray-500 py-8">
+                            <i class="bi bi-plus-circle text-3xl"></i>
+                            <p class="mt-2">هیچ مزرعه‌ای ثبت نشده است</p>
+                            <a href="/map/" class="text-green-600 hover:underline">ثبت مزرعه جدید</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = farms.map(farm => `
+                    <div class="farm-card">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <div class="font-bold text-gray-800">${farm.name}</div>
+                                <div class="text-sm text-gray-600">${farm.area_display || farm.area + ' هکتار'}</div>
+                                <div class="text-xs text-gray-400 mt-1">${farm.address || 'آدرس نامشخص'}</div>
+                                <div class="text-xs text-gray-400">${new Date(farm.created_at).toLocaleDateString('fa-IR')}</div>
+                            </div>
+                            <button onclick="window.location.href='/health-chart/'" 
+                                    class="bg-green-600 text-white px-3 py-1 rounded text-xs hover:bg-green-700 transition whitespace-nowrap">
+                                📈 روند سلامت
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading farms:', error);
+                document.getElementById('farms-list').innerHTML = `
+                    <div class="col-span-full text-center text-red-600 py-8">خطا در بارگذاری مزارع</div>
+                `;
+            }
+        }
+
+        // ============================================================
+        // بارگذاری تاریخچه تحلیل‌ها
+        // ============================================================
+        async function loadAnalyses() {
+            try {
+                const token = getToken();
+                const response = await fetch(`${API_BASE}/profile/analyses/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('خطا در دریافت تحلیل‌ها');
+
+                const data = await response.json();
+                const container = document.getElementById('analyses-list');
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-8">
+                            <i class="bi bi-bar-chart text-3xl"></i>
+                            <p class="mt-2">هیچ تحلیلی ثبت نشده است</p>
+                            <a href="/map/" class="text-green-600 hover:underline">انجام تحلیل جدید</a>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = `
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-gray-50">
+                                    <th class="px-4 py-2 text-right">کد نمونه</th>
+                                    <th class="px-4 py-2 text-right">مزرعه</th>
+                                    <th class="px-4 py-2 text-right">pH</th>
+                                    <th class="px-4 py-2 text-right">EC</th>
+                                    <th class="px-4 py-2 text-right">سلامت خاک</th>
+                                    <th class="px-4 py-2 text-right">تاریخ</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.map(item => `
+                                    <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                        <td class="px-4 py-2 font-mono text-xs">${item.sample.sample_code}</td>
+                                        <td class="px-4 py-2">${item.sample.farm_name || '---'}</td>
+                                        <td class="px-4 py-2">${item.sample.ph}</td>
+                                        <td class="px-4 py-2">${item.sample.ec}</td>
+                                        <td class="px-4 py-2">
+                                            ${item.analysis ? `
+                                                <span class="font-bold ${item.analysis.soil_health_index >= 80 ? 'text-green-600' : item.analysis.soil_health_index >= 60 ? 'text-blue-600' : 'text-yellow-600'}">
+                                                    ${item.analysis.soil_health_index}%
+                                                </span>
+                                            ` : '---'}
+                                        </td>
+                                        <td class="px-4 py-2 text-gray-400 text-xs">${new Date(item.sample.created_at).toLocaleDateString('fa-IR')}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error loading analyses:', error);
+                document.getElementById('analyses-list').innerHTML = `
+                    <div class="text-center text-red-600 py-8">خطا در بارگذاری تاریخچه</div>
+                `;
+            }
+        }
+
+        // ============================================================
+        // ارتقاء اشتراک
+        // ============================================================
+        document.getElementById('upgrade-subscription-btn').addEventListener('click', function() {
+            window.location.href = '/subscription/';
+        });
+
+        // ============================================================
+        // ویرایش پروفایل
+        // ============================================================
+        document.getElementById('edit-profile-btn').addEventListener('click', function() {
+            const form = document.getElementById('edit-form');
+            if (form.style.display === 'none') {
+                form.style.display = 'block';
+                this.textContent = 'بستن فرم ویرایش';
+                this.classList.remove('btn-blue');
+                this.classList.add('bg-gray-600');
+            } else {
+                form.style.display = 'none';
+                this.textContent = 'ویرایش';
+                this.classList.remove('bg-gray-600');
+                this.classList.add('btn-blue');
+            }
+        });
+
+        document.getElementById('cancel-edit').addEventListener('click', function() {
+            document.getElementById('edit-form').style.display = 'none';
+            const btn = document.getElementById('edit-profile-btn');
+            btn.textContent = 'ویرایش';
+            btn.classList.remove('bg-gray-600');
+            btn.classList.add('btn-blue');
+        });
+
+        document.getElementById('profile-edit-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const token = getToken();
+            const messageDiv = document.getElementById('edit-message');
+            
+            const data = {
+                first_name: document.getElementById('edit-first-name').value,
+                last_name: document.getElementById('edit-last-name').value,
+                email: document.getElementById('edit-email').value,
+                phone: document.getElementById('edit-phone').value,
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/profile/update/`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (response.status === 401) {
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('refresh_token');
+                    window.location.href = '/login/';
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    messageDiv.className = 'mt-3 p-3 bg-green-100 text-green-700 rounded-lg';
+                    messageDiv.textContent = '✅ اطلاعات با موفقیت به‌روزرسانی شد';
+                    messageDiv.classList.remove('hidden');
+                    
+                    setTimeout(() => {
+                        loadProfile();
+                        document.getElementById('edit-form').style.display = 'none';
+                        const btn = document.getElementById('edit-profile-btn');
+                        btn.textContent = 'ویرایش';
+                        btn.classList.remove('bg-gray-600');
+                        btn.classList.add('btn-blue');
+                        messageDiv.classList.add('hidden');
+                    }, 1500);
+                } else {
+                    throw new Error(result.error || 'خطا در ویرایش');
+                }
+            } catch (error) {
+                messageDiv.className = 'mt-3 p-3 bg-red-100 text-red-700 rounded-lg';
+                messageDiv.textContent = '❌ ' + error.message;
+                messageDiv.classList.remove('hidden');
+            }
+        });
+
+        // ============================================================
+        // بارگذاری اولیه
+        // ============================================================
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = getToken();
+            if (!token) {
+                window.location.href = '/login/';
+                return;
+            }
+            updateUserUI();
+            loadProfile();
+        });
+    </script>
+</body>
+</html>
