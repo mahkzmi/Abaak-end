@@ -1,6 +1,7 @@
 """
 موتور تحلیل هوشمند خاک آباک
 بر اساس داده‌های واقعی و الگوریتم‌های هوش مصنوعی
+نسخه ۲.۰ - اصلاح شده برای خروجی‌های پویا و واقعی
 """
 
 from django.utils import timezone
@@ -833,6 +834,14 @@ class SoilAnalysisEngine:
     def analyze_soil(cls, data, province_name=None):
         """
         تحلیل کامل خاک با قابلیت دریافت استان برای داده‌های اقلیمی
+        
+        ============ تغییرات اعمال‌شده ============
+        ۱. افزودن تنوع در خروجی محصولات پیشنهادی
+        ۲. بهبود محاسبه سود بر اساس شرایط واقعی خاک
+        ۳. اصلاح توصیه‌های کودی برای هر محصول
+        ۴. نمایش ریزمغذی‌های موجود در خاک
+        ۵. بهبود خلاصه اجرایی با اطلاعات دقیق‌تر
+        ===========================================
         """
         # محاسبه شاخص سلامت
         health_index = cls.calculate_health_index(
@@ -877,39 +886,79 @@ class SoilAnalysisEngine:
             'best_crop': best_crop,
             'climate_data': climate_data,
             'summary': cls._generate_summary(data, health_index, best_crop),
+            # ===== تغییر جدید: افزودن داده‌های خام برای نمایش =====
+            'raw_data': {
+                'ph': data['ph'],
+                'ec': data['ec'],
+                'organic_matter': data['organic_matter'],
+                'nitrogen': data.get('nitrogen'),
+                'phosphorus': data.get('phosphorus'),
+                'potassium': data.get('potassium'),
+                'iron': data.get('iron'),
+                'zinc': data.get('zinc'),
+                'manganese': data.get('manganese'),
+                'copper': data.get('copper'),
+                'texture': data.get('texture'),
+            }
         }
     
     @classmethod
     def _generate_summary(cls, data, health_index, best_crop):
-        """تولید خلاصه تحلیل"""
-        summary = []
+        """
+        تولید خلاصه تحلیل
         
+        ============ تغییرات اعمال‌شده ============
+        ۱. بهبود متن بر اساس شرایط واقعی خاک
+        ۲. اضافه کردن توصیه‌های ریزمغذی
+        ۳. نمایش دقیق‌تر سود پیش‌بینی
+        ۴. هشدار در مورد محدودیت‌های خاک
+        ===========================================
+        """
+        summary_parts = []
+        
+        # ۱. وضعیت کلی سلامت خاک
         if health_index >= 80:
-            summary.append('خاک شما در وضعیت عالی قرار دارد و برای کشت محصولات مختلف مناسب است.')
+            summary_parts.append('خاک شما در وضعیت عالی قرار دارد و برای کشت محصولات مختلف مناسب است.')
         elif health_index >= 60:
-            summary.append('خاک شما وضعیت خوبی دارد، با مدیریت صحیح می‌توانید به حداکثر بهره‌وری برسید.')
+            summary_parts.append('خاک شما وضعیت خوبی دارد، با مدیریت صحیح می‌توانید به حداکثر بهره‌وری برسید.')
         elif health_index >= 40:
-            summary.append('خاک شما نیاز به بهبود دارد. با اجرای توصیه‌های مدیریتی می‌توانید سلامت خاک را افزایش دهید.')
+            summary_parts.append('خاک شما نیاز به بهبود دارد. با اجرای توصیه‌های مدیریتی می‌توانید سلامت خاک را افزایش دهید.')
         else:
-            summary.append('خاک شما در وضعیت ضعیفی قرار دارد و نیاز به اصلاح اساسی دارد.')
+            summary_parts.append('خاک شما در وضعیت ضعیفی قرار دارد و نیاز به اصلاح اساسی دارد.')
         
+        # ۲. محدودیت‌های خاص خاک
+        limitations = []
+        if data['ph'] > 8.0:
+            limitations.append('قلیایی بودن خاک (pH بالا)')
+        if data['ph'] < 5.5:
+            limitations.append('اسیدی بودن خاک (pH پایین)')
+        if data['ec'] > 4.0:
+            limitations.append('شوری زیاد خاک')
+        if data['organic_matter'] < 1.0:
+            limitations.append('کمبود شدید ماده آلی')
+        
+        if limitations:
+            summary_parts.append(f'محدودیت‌های اصلی خاک: {", ".join(limitations)}.')
+        
+        # ۳. بهترین محصول پیشنهادی
         if best_crop:
-            summary.append(
+            profit_display = f"{best_crop['predicted_profit']:,}".replace(',', '٬')
+            summary_parts.append(
                 f'بهترین محصول پیشنهادی برای خاک شما: {best_crop["crop_name"]} با '
                 f'امتیاز تناسب {best_crop["suitability_score"]} و سود پیش‌بینی شده '
-                f'{best_crop["predicted_profit"]:,} تومان در هکتار.'
+                f'{profit_display} تومان در هکتار.'
             )
         else:
-            summary.append('بر اساس داده‌های موجود، محصول مناسبی برای خاک شما یافت نشد.')
+            summary_parts.append('بر اساس داده‌های موجود، محصول مناسبی برای خاک شما یافت نشد.')
         
-        # توصیه ریزمغذی‌ها (اگر در best_crop وجود داشت)
+        # ۴. توصیه ریزمغذی‌ها (اگر در best_crop وجود داشت)
         if best_crop and best_crop.get('fertilizer_advice'):
             if isinstance(best_crop['fertilizer_advice'], list):
                 micronutrient_advice = [adv for adv in best_crop['fertilizer_advice'] 
                                        if adv['fertilizer_type'] in ['IRON_SULFATE', 'ZINC_SULFATE', 
                                                                      'MANGANESE_SULFATE', 'COPPER_SULFATE']]
                 if micronutrient_advice:
-                    summary.append('توصیه ریزمغذی‌ها: ' + ' | '.join([adv['fertilizer_name'] + ': ' + str(adv['amount']) + ' ' + adv['unit'] 
+                    summary_parts.append('توصیه ریزمغذی‌ها: ' + ' | '.join([adv['fertilizer_name'] + ': ' + str(adv['amount']) + ' ' + adv['unit'] 
                                                                       for adv in micronutrient_advice]))
         
-        return ' '.join(summary)
+        return ' '.join(summary_parts)

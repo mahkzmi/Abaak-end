@@ -53,11 +53,10 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
-    # 'django.middleware.csrf.CsrfViewMiddleware',  # ← حتماً کامنت باشه
+    'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
@@ -129,11 +128,18 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# ============ Custom User Model ============
+
+#AUTH_USER_MODEL = 'accounts.CustomUser'
 
 
 # ============ REST Framework ============
@@ -143,15 +149,18 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES': (
-        'rest_framework.permissions.AllowAny',  # موقتاً برای تست
+        'rest_framework.permissions.AllowAny',
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 20,
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
     ),
     'DEFAULT_PARSER_CLASSES': (
         'rest_framework.parsers.JSONParser',
+        'rest_framework.parsers.FormParser',
+        'rest_framework.parsers.MultiPartParser',
     ),
 }
 
@@ -204,7 +213,6 @@ CORS_ALLOW_HEADERS = [
 
 # ============ Security Settings ============
 
-# CSRF - غیرفعال کامل برای APIها
 CSRF_COOKIE_SECURE = False
 CSRF_COOKIE_HTTPONLY = False
 CSRF_USE_SESSIONS = False
@@ -213,14 +221,13 @@ CSRF_COOKIE_SAMESITE = None
 CSRF_TRUSTED_ORIGINS = [
     'http://localhost:8000',
     'http://127.0.0.1:8000',
+    'https://*.herokuapp.com',
 ]
 
-# Session
 SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
 
-# Security Headers
 SECURE_BROWSER_XSS_FILTER = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = 'DENY'
@@ -230,16 +237,27 @@ SECURE_REFERRER_POLICY = 'same-origin'
 # ============ Axes (Brute Force Protection) ============
 
 AUTHENTICATION_BACKENDS = [
-    # 'axes.backends.AxesBackend',  # غیرفعال برای تست
+    'axes.backends.AxesStandaloneBackend',
     'django.contrib.auth.backends.ModelBackend',
 ]
 
-AXES_ENABLED = False  # غیرفعال برای تست
+# تنظیمات جدید و به‌روز شده Axes
+AXES_ENABLED = True
 AXES_FAILURE_LIMIT = 5
-AXES_COOLOFF_TIME = 1
-AXES_LOCK_OUT_AT_FAILURE = True
-AXES_USE_USER_AGENT = False
-AXES_ONLY_USER_FAILURES = True
+AXES_LOCKOUT_TIME = 60 * 30  # ۳۰ دقیقه
+AXES_COOLOFF_TIME = 60 * 60  # ۱ ساعت
+
+# تنظیمات پارامترهای قفل‌شدن (رفع W006)
+AXES_LOCKOUT_PARAMETERS = ['ip_address', 'username']
+
+# تنظیمات دیگر
+AXES_LOGGER = 'axes.watch'
+AXES_RESET_ON_SUCCESS = True
+AXES_VERBOSE = True
+
+# تنظیمات منسوخ شده (کامنت یا حذف شده)
+# AXES_ONLY_USER_FAILURES = True  # حذف شد
+# AXES_USE_USER_AGENT = False     # حذف شد
 
 
 # ============ Logging ============
@@ -247,9 +265,25 @@ AXES_ONLY_USER_FAILURES = True
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {asctime} {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+        'file': {
+            'class': 'logging.FileHandler',
+            'filename': BASE_DIR / 'logs' / 'django.log',
+            'formatter': 'verbose',
         },
     },
     'root': {
@@ -262,10 +296,56 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
+        'django.db.backends': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
         'axes': {
             'handlers': ['console'],
             'level': 'INFO',
             'propagate': False,
         },
+        'accounts': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        'soil': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
     },
 }
+
+
+# ============ Email Settings (برای تولید) ============
+
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # فقط برای تست
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-email@gmail.com'
+# EMAIL_HOST_PASSWORD = 'your-password'
+
+DEFAULT_FROM_EMAIL = 'noreply@abak-agri.ir'
+
+
+# ============ Site Settings ============
+
+SITE_NAME = 'آباک'
+SITE_DESCRIPTION = 'سامانه هوشمند تحلیل خاک و توصیه کشاورزی'
+SITE_URL = 'http://127.0.0.1:8000'
+
+# ============ Django Debug Toolbar ============
+
+if DEBUG:
+    try:
+        import debug_toolbar
+        INSTALLED_APPS.append('debug_toolbar')
+        MIDDLEWARE.insert(0, 'debug_toolbar.middleware.DebugToolbarMiddleware')
+        INTERNAL_IPS = ['127.0.0.1']
+    except ImportError:
+        pass

@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>پروفایل کاربری - آباک</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- فونت و آیکون‌ها -->
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
         * {
             font-family: 'Vazirmatn', 'Tahoma', sans-serif;
@@ -57,105 +60,40 @@
             background: white;
         }
         .farm-card:hover {
-            border-color: #2e7d32;
+            border-color: #0d9488;
             box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             transform: translateY(-2px);
         }
         
-        .nav-link {
-            transition: all 0.2s ease;
-            padding: 8px 16px;
+        .btn-primary {
+            background: #0d9488;
+            color: white;
+            padding: 8px 20px;
             border-radius: 8px;
-            color: #374151;
+            transition: all 0.2s;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
             text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 6px;
         }
-        .nav-link:hover {
-            background: #f0fdf4;
-            color: #166534;
-        }
-        .nav-link.active {
-            background: #dcfce7;
-            color: #166534;
-            font-weight: 600;
-        }
-        
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: #2e7d32;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 14px;
-        }
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 14px;
-            border-radius: 8px;
-            transition: all 0.2s;
-            color: #374151;
-            text-decoration: none;
-            width: 100%;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .dropdown-item:hover {
-            background: #f3f4f6;
-        }
-        .dropdown-item i {
-            width: 20px;
-        }
-        .sidebar-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: white;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            border-radius: 12px;
-            padding: 8px;
-            min-width: 200px;
-            z-index: 50;
-        }
-        .sidebar-menu.open {
-            display: block;
-        }
-        
-        .btn-primary {
-            background: #2e7d32;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 8px;
-            transition: all 0.2s;
-            font-size: 14px;
-            border: none;
-            cursor: pointer;
-        }
         .btn-primary:hover {
-            background: #1b5e20;
+            background: #0f766e;
         }
         .btn-outline {
             background: transparent;
-            color: #2e7d32;
+            color: #0d9488;
             padding: 8px 20px;
             border-radius: 8px;
             transition: all 0.2s;
             font-size: 14px;
-            border: 1px solid #2e7d32;
+            border: 1px solid #0d9488;
             cursor: pointer;
         }
         .btn-outline:hover {
-            background: #f0fdf4;
+            background: #ccfbf1;
         }
         .btn-danger {
             background: #dc2626;
@@ -166,6 +104,9 @@
             font-size: 14px;
             border: none;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
         .btn-danger:hover {
             background: #b91c1c;
@@ -179,94 +120,91 @@
             font-size: 14px;
             border: none;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
         .btn-blue:hover {
             background: #1d4ed8;
         }
+        
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .btn-ghost {
+            background: transparent;
+            color: #64748b;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 14px;
+            border: 1px solid transparent;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        .btn-ghost:hover {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
     </style>
 </head>
-<body class="bg-gray-50">
+<body>
+
+    <!-- ============================================================ -->
+    <!-- هدر یکپارچه با منطق نقش                                       -->
+    <!-- ============================================================ -->
+    {% include 'includes/header.html' %}
+
+    <!-- ============================================================ -->
+    <!-- محتوای اصلی                                                   -->
+    <!-- ============================================================ -->
     <div class="container mx-auto px-4 py-8">
-        
-        <!-- ==================== هدر یکپارچه ==================== -->
-        <nav class="bg-white rounded-xl shadow-lg p-4 mb-6">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <a href="/" class="flex items-center gap-3 hover:opacity-80 transition">
-                    <i class="bi bi-tree-fill text-3xl text-green-700"></i>
-                    <div>
-                        <h1 class="text-2xl font-bold text-green-700">آباک</h1>
-                        <p class="text-xs text-gray-500">سامانه هوشمند تحلیل خاک</p>
-                    </div>
-                </a>
 
-                <div class="hidden md:flex items-center gap-1 flex-wrap" id="main-menu">
-                    <a href="/map/" class="nav-link"><i class="bi bi-map"></i> نقشه</a>
-                    <a href="/dashboard/" class="nav-link"><i class="bi bi-speedometer2"></i> داشبورد</a>
-                    <a href="/farms/" class="nav-link"><i class="bi bi-tree"></i> مزارع</a>
-                    <a href="/health-chart/" class="nav-link"><i class="bi bi-graph-up"></i> روند سلامت</a>
-                    <a href="/expert-request/" class="nav-link"><i class="bi bi-person-badge"></i> درخواست کارشناس</a>
-                    <a href="/lab/" class="nav-link"><i class="bi bi-flask"></i> آزمایشگاه</a>
-                    <a href="/verify/" class="nav-link"><i class="bi bi-check-circle"></i> تأیید</a>
-                </div>
-
-                <div class="flex items-center gap-3">
-                    <div class="relative">
-                        <button id="user-menu-btn" class="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-lg transition">
-                            <div class="user-avatar" id="user-avatar">ک</div>
-                            <i class="bi bi-chevron-down text-gray-400 text-sm"></i>
-                        </button>
-                        <div id="user-dropdown" class="sidebar-menu">
-                            <div class="px-4 py-3 border-b border-gray-100">
-                                <div class="font-bold text-gray-800" id="user-name">کاربر</div>
-                                <div class="text-xs text-gray-500" id="user-role">کشاورز</div>
-                            </div>
-                            <a href="/profile/" class="dropdown-item"><i class="bi bi-person"></i> پروفایل</a>
-                            <a href="/dashboard/" class="dropdown-item"><i class="bi bi-speedometer2"></i> داشبورد</a>
-                            <a href="/subscription/" class="dropdown-item"><i class="bi bi-credit-card"></i> اشتراک</a>
-                            <hr class="my-1">
-                            <button id="logout-btn" class="dropdown-item text-red-600 hover:bg-red-50">
-                                <i class="bi bi-box-arrow-left"></i> خروج
-                            </button>
-                        </div>
-                    </div>
-                    <button id="mobile-menu-btn" class="md:hidden text-gray-600 hover:text-gray-800 p-2">
-                        <i class="bi bi-list text-2xl"></i>
-                    </button>
-                </div>
-            </div>
-            <div id="mobile-menu" class="md:hidden hidden mt-4 pt-4 border-t border-gray-100">
-                <div class="flex flex-col space-y-1" id="mobile-menu-items">
-                    <a href="/map/" class="nav-link block"><i class="bi bi-map ml-2"></i> نقشه</a>
-                    <a href="/dashboard/" class="nav-link block"><i class="bi bi-speedometer2 ml-2"></i> داشبورد</a>
-                    <a href="/farms/" class="nav-link block"><i class="bi bi-tree ml-2"></i> مزارع</a>
-                    <a href="/health-chart/" class="nav-link block"><i class="bi bi-graph-up ml-2"></i> روند سلامت</a>
-                    <a href="/expert-request/" class="nav-link block"><i class="bi bi-person-badge ml-2"></i> درخواست کارشناس</a>
-                    <a href="/lab/" class="nav-link block"><i class="bi bi-flask ml-2"></i> آزمایشگاه</a>
-                    <a href="/verify/" class="nav-link block"><i class="bi bi-check-circle ml-2"></i> تأیید</a>
-                </div>
-            </div>
-        </nav>
-
-        <!-- ==================== محتوای اصلی ==================== -->
+        <!-- ===== هدر صفحه ===== -->
         <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
             <div>
                 <h1 class="text-2xl font-bold text-green-700">👤 پروفایل کاربری</h1>
                 <p class="text-gray-600 text-sm">مدیریت اطلاعات و مشاهده فعالیت‌ها</p>
             </div>
             <div class="flex flex-wrap gap-2">
-                <a href="/dashboard/" class="btn-blue">
+                <a href="/dashboard/" class="btn-primary text-sm">
                     <i class="bi bi-speedometer2 ml-1"></i> داشبورد
                 </a>
-                <a href="/" class="btn-primary">
+                <a href="/" class="btn-primary text-sm">
                     <i class="bi bi-house ml-1"></i> خانه
                 </a>
-                <button id="logout-btn" class="btn-danger">
+                <button id="logout-btn" class="btn-danger text-sm">
                     <i class="bi bi-box-arrow-left ml-1"></i> خروج
                 </button>
             </div>
         </div>
 
-        <!-- ==================== اطلاعات پروفایل ==================== -->
+        <!-- ===== اطلاعات پروفایل ===== -->
         <div class="profile-section">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="section-title border-none mb-0 pb-0">اطلاعات شخصی</h2>
@@ -302,7 +240,7 @@
             </div>
         </div>
 
-        <!-- ==================== فرم ویرایش ==================== -->
+        <!-- ===== فرم ویرایش ===== -->
         <div id="edit-form" class="profile-section" style="display: none;">
             <h2 class="section-title">✏️ ویرایش اطلاعات</h2>
             <form id="profile-edit-form" class="space-y-4">
@@ -340,7 +278,7 @@
             <div id="edit-message" class="mt-3 hidden"></div>
         </div>
 
-        <!-- ==================== وضعیت اشتراک ==================== -->
+        <!-- ===== وضعیت اشتراک ===== -->
         <div class="profile-section" id="subscription-section">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="section-title border-none mb-0 pb-0">💳 وضعیت اشتراک</h2>
@@ -353,7 +291,7 @@
             </div>
         </div>
 
-        <!-- ==================== مزارع کاربر ==================== -->
+        <!-- ===== مزارع کاربر ===== -->
         <div class="profile-section">
             <div class="flex items-center justify-between mb-4">
                 <h2 class="section-title border-none mb-0 pb-0">🌾 مزارع من</h2>
@@ -366,7 +304,7 @@
             </div>
         </div>
 
-        <!-- ==================== تاریخچه تحلیل‌ها ==================== -->
+        <!-- ===== تاریخچه تحلیل‌ها ===== -->
         <div class="profile-section">
             <h2 class="section-title">📊 تاریخچه تحلیل‌ها</h2>
             <div id="analyses-list">
@@ -375,58 +313,37 @@
         </div>
     </div>
 
+    <!-- ============================================================ -->
+    <!-- JavaScript                                                   -->
+    <!-- ============================================================ -->
     <script>
         const API_BASE = '/api';
 
         // ============================================================
         // ۰. توابع کمکی
         // ============================================================
+        
         function getToken() {
             return localStorage.getItem('access_token');
         }
 
-        function getUserInfo() {
-            try {
-                const token = getToken();
-                if (!token) return null;
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                return {
-                    username: payload.username || 'کاربر',
-                    role: payload.role || 'کشاورز'
-                };
-            } catch {
-                return null;
-            }
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            };
+        }
+
+        function redirectToLogin() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            window.location.href = '/login/';
         }
 
         // ============================================================
-        // منوها
+        // ۱. خروج از سیستم
         // ============================================================
-        document.getElementById('user-menu-btn').addEventListener('click', function(e) {
-            e.stopPropagation();
-            document.getElementById('user-dropdown').classList.toggle('open');
-        });
-
-        document.addEventListener('click', function() {
-            document.getElementById('user-dropdown').classList.remove('open');
-        });
-
-        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
-        });
-
-        function updateUserUI() {
-            const info = getUserInfo();
-            if (info) {
-                document.getElementById('user-name').textContent = info.username;
-                document.getElementById('user-role').textContent = info.role;
-                document.getElementById('user-avatar').textContent = info.username.charAt(0).toUpperCase();
-            }
-        }
-
-        // ============================================================
-        // خروج
-        // ============================================================
+        
         document.getElementById('logout-btn').addEventListener('click', function() {
             if (confirm('آیا مطمئن هستید که می‌خواهید خارج شوید؟')) {
                 localStorage.removeItem('access_token');
@@ -436,30 +353,27 @@
         });
 
         // ============================================================
-        // بارگذاری اطلاعات پروفایل
+        // ۲. بارگذاری اطلاعات پروفایل
         // ============================================================
+        
         async function loadProfile() {
             try {
                 const token = getToken();
                 if (!token) {
-                    window.location.href = '/login/';
+                    redirectToLogin();
                     return;
                 }
 
                 const response = await fetch(`${API_BASE}/profile/detail/`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: getHeaders()
                 });
 
                 if (response.status === 401) {
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
-                    window.location.href = '/login/';
+                    redirectToLogin();
                     return;
                 }
 
-                if (!response.ok) {
-                    throw new Error('خطا در دریافت اطلاعات');
-                }
+                if (!response.ok) throw new Error('خطا در دریافت اطلاعات');
 
                 const data = await response.json();
                 displayProfile(data);
@@ -480,13 +394,21 @@
             document.getElementById('username').textContent = data.username || '---';
             document.getElementById('email').textContent = data.email || '---';
             document.getElementById('phone').textContent = data.phone || '---';
-            document.getElementById('role').textContent = data.role_display || '---';
+            
+            const roleMap = {
+                'FARMER': '🌾 کشاورز',
+                'LAB': '🧪 مسئول آزمایشگاه',
+                'EXPERT': '👨‍🔬 کارشناس',
+                'CRM': '📞 مدیر CRM',
+                'ADMIN': '⚙️ مدیر کل سیستم'
+            };
+            document.getElementById('role').textContent = roleMap[data.role] || data.role || '---';
             
             const statusEl = document.getElementById('verification-status');
             if (data.is_verified) {
-                statusEl.innerHTML = '<span class="text-green-600 font-bold">✓ تأیید شده</span>';
+                statusEl.innerHTML = '<span class="badge-success">✓ تأیید شده</span>';
             } else {
-                statusEl.innerHTML = '<span class="text-yellow-600 font-bold">⏳ در انتظار تأیید</span>';
+                statusEl.innerHTML = '<span class="badge-warning">⏳ در انتظار تأیید</span>';
             }
 
             document.getElementById('edit-first-name').value = data.first_name || '';
@@ -496,24 +418,24 @@
         }
 
         // ============================================================
-        // بارگذاری وضعیت اشتراک
+        // ۳. بارگذاری وضعیت اشتراک
         // ============================================================
+        
         async function loadSubscription() {
             try {
                 const token = getToken();
                 const response = await fetch(`${API_BASE}/subscriptions/my/`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: getHeaders()
                 });
 
-                if (!response.ok) {
-                    throw new Error('خطا در دریافت وضعیت اشتراک');
-                }
+                if (!response.ok) throw new Error('خطا در دریافت وضعیت اشتراک');
 
                 const data = await response.json();
                 const container = document.getElementById('subscription-info');
                 
                 let statusColor = 'text-green-600';
                 let statusBg = 'bg-green-50';
+                
                 if (data.status === 'EXPIRED') {
                     statusColor = 'text-red-600';
                     statusBg = 'bg-red-50';
@@ -553,26 +475,26 @@
             } catch (error) {
                 console.error('Error loading subscription:', error);
                 document.getElementById('subscription-info').innerHTML = `
-                    <div class="text-center text-red-600 py-4">خطا در بارگذاری وضعیت اشتراک</div>
+                    <div class="text-center text-gray-500 py-4">خطا در بارگذاری وضعیت اشتراک</div>
                 `;
             }
         }
 
         // ============================================================
-        // بارگذاری مزارع
+        // ۴. بارگذاری مزارع
         // ============================================================
+        
         async function loadFarms() {
             try {
                 const token = getToken();
                 const response = await fetch(`${API_BASE}/profile/farms/`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: getHeaders()
                 });
 
                 if (!response.ok) throw new Error('خطا در دریافت مزارع');
 
                 let farms = await response.json();
                 
-                // اگر results وجود داشت ازش استفاده کن
                 if (farms.results && Array.isArray(farms.results)) {
                     farms = farms.results;
                 } else if (!Array.isArray(farms)) {
@@ -617,13 +539,14 @@
         }
 
         // ============================================================
-        // بارگذاری تاریخچه تحلیل‌ها
+        // ۵. بارگذاری تاریخچه تحلیل‌ها
         // ============================================================
+        
         async function loadAnalyses() {
             try {
                 const token = getToken();
                 const response = await fetch(`${API_BASE}/profile/analyses/`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: getHeaders()
                 });
 
                 if (!response.ok) throw new Error('خطا در دریافت تحلیل‌ها');
@@ -685,15 +608,17 @@
         }
 
         // ============================================================
-        // ارتقاء اشتراک
+        // ۶. ارتقاء اشتراک
         // ============================================================
+        
         document.getElementById('upgrade-subscription-btn').addEventListener('click', function() {
             window.location.href = '/subscription/';
         });
 
         // ============================================================
-        // ویرایش پروفایل
+        // ۷. ویرایش پروفایل
         // ============================================================
+        
         document.getElementById('edit-profile-btn').addEventListener('click', function() {
             const form = document.getElementById('edit-form');
             if (form.style.display === 'none') {
@@ -733,17 +658,12 @@
             try {
                 const response = await fetch(`${API_BASE}/profile/update/`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
+                    headers: getHeaders(),
                     body: JSON.stringify(data)
                 });
 
                 if (response.status === 401) {
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
-                    window.location.href = '/login/';
+                    redirectToLogin();
                     return;
                 }
 
@@ -774,17 +694,18 @@
         });
 
         // ============================================================
-        // بارگذاری اولیه
+        // ۸. بارگذاری اولیه
         // ============================================================
+        
         document.addEventListener('DOMContentLoaded', function() {
             const token = getToken();
             if (!token) {
-                window.location.href = '/login/';
+                redirectToLogin();
                 return;
             }
-            updateUserUI();
             loadProfile();
         });
     </script>
+
 </body>
 </html>

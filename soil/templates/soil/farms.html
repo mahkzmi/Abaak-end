@@ -4,11 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>مدیریت مزارع - آباک</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- فونت و آیکون‌ها -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet برای نقشه -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+    
     <style>
         * {
             font-family: 'Vazirmatn', 'Tahoma', sans-serif;
@@ -21,16 +26,28 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.06);
             border: 1px solid #f3f4f6;
             transition: all 0.3s ease;
+            cursor: pointer;
         }
         .farm-card:hover {
             box-shadow: 0 8px 24px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
+            transform: translateY(-4px);
+            border-color: #0d9488;
         }
+        .farm-card .card-actions {
+            cursor: default;
+        }
+        .farm-card .card-actions button {
+            cursor: pointer;
+        }
+        
         .mini-map {
             height: 120px;
             border-radius: 8px;
             margin-top: 8px;
+            background: #e5e7eb;
+            pointer-events: none;
         }
+        
         .modal-overlay {
             display: none;
             position: fixed;
@@ -39,13 +56,11 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.5);
-            z-index: 1000;
+            z-index: 10000;
             justify-content: center;
             align-items: center;
         }
-        .modal-overlay.active {
-            display: flex;
-        }
+        .modal-overlay.active { display: flex; }
         .modal-box {
             background: white;
             padding: 24px;
@@ -55,6 +70,7 @@
             max-height: 80vh;
             overflow-y: auto;
         }
+        
         .status-badge {
             padding: 4px 12px;
             border-radius: 20px;
@@ -64,174 +80,136 @@
         .status-active { background: #d1fae5; color: #065f46; }
         .status-inactive { background: #fee2e2; color: #991b1b; }
         
-        .nav-link {
-            transition: all 0.2s ease;
-            padding: 8px 16px;
+        .btn-primary {
+            background: #0d9488;
+            color: white;
+            padding: 8px 20px;
             border-radius: 8px;
-            color: #374151;
+            transition: all 0.2s;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             text-decoration: none;
+        }
+        .btn-primary:hover {
+            background: #0f766e;
+        }
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+        .btn-danger {
+            background: #dc2626;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 6px;
         }
-        .nav-link:hover {
-            background: #f0fdf4;
-            color: #166534;
+        .btn-danger:hover {
+            background: #b91c1c;
         }
-        .nav-link.active {
-            background: #dcfce7;
-            color: #166534;
-            font-weight: 600;
-        }
-        
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: #2e7d32;
+        .btn-blue {
+            background: #2563eb;
             color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 14px;
-        }
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 14px;
+            padding: 8px 20px;
             border-radius: 8px;
             transition: all 0.2s;
-            color: #374151;
-            text-decoration: none;
-            width: 100%;
-            background: none;
+            font-size: 14px;
             border: none;
             cursor: pointer;
-            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
         }
-        .dropdown-item:hover {
-            background: #f3f4f6;
+        .btn-blue:hover {
+            background: #1d4ed8;
         }
-        .dropdown-item i {
-            width: 20px;
+        
+        /* اشاره‌گر کلیک */
+        .clickable {
+            cursor: pointer;
         }
-        .sidebar-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: white;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            border-radius: 12px;
-            padding: 8px;
-            min-width: 200px;
-            z-index: 50;
-        }
-        .sidebar-menu.open {
-            display: block;
+        .clickable:hover .farm-name {
+            color: #0d9488;
         }
     </style>
 </head>
-<body class="bg-gray-50">
+<body>
+
+    <!-- ============================================================ -->
+    <!-- هدر یکپارچه با منطق نقش                                       -->
+    <!-- ============================================================ -->
+    {% include 'includes/header.html' %}
+
+    <!-- ============================================================ -->
+    <!-- محتوای اصلی                                                   -->
+    <!-- ============================================================ -->
     <div class="container mx-auto px-4 py-8">
-        
-        <!-- ==================== هدر یکپارچه ==================== -->
-        <nav class="bg-white rounded-xl shadow-lg p-4 mb-6">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <!-- لوگو -->
-                <a href="/" class="flex items-center gap-3 hover:opacity-80 transition">
-                    <i class="bi bi-tree-fill text-3xl text-green-700"></i>
-                    <div>
-                        <h1 class="text-2xl font-bold text-green-700">آباک</h1>
-                        <p class="text-xs text-gray-500">سامانه هوشمند 분석 خاک</p>
-                    </div>
-                </a>
 
-                <!-- منوی اصلی (دسکتاپ) - توسط JavaScript پر می‌شود -->
-                <div class="hidden md:flex items-center gap-1 flex-wrap" id="main-menu"></div>
-
-                <!-- بخش کاربر -->
-                <div class="flex items-center gap-3">
-                    <div class="relative">
-                        <button id="user-menu-btn" class="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-lg transition">
-                            <div class="user-avatar" id="user-avatar">ک</div>
-                            <i class="bi bi-chevron-down text-gray-400 text-sm"></i>
-                        </button>
-                        
-                        <div id="user-dropdown" class="sidebar-menu">
-                            <div class="px-4 py-3 border-b border-gray-100">
-                                <div class="font-bold text-gray-800" id="user-name">کاربر</div>
-                                <div class="text-xs text-gray-500" id="user-role">کشاورز</div>
-                            </div>
-                            <a href="/profile/" class="dropdown-item">
-                                <i class="bi bi-person"></i> پروفایل
-                            </a>
-                            <a href="/dashboard/" class="dropdown-item">
-                                <i class="bi bi-speedometer2"></i> داشبورد
-                            </a>
-                            <a href="/subscription/" class="dropdown-item">
-                                <i class="bi bi-credit-card"></i> اشتراک
-                            </a>
-                            <hr class="my-1">
-                            <button id="logout-btn" class="dropdown-item text-red-600 hover:bg-red-50">
-                                <i class="bi bi-box-arrow-left"></i> خروج
-                            </button>
-                        </div>
-                    </div>
-
-                    <button id="mobile-menu-btn" class="md:hidden text-gray-600 hover:text-gray-800 p-2">
-                        <i class="bi bi-list text-2xl"></i>
-                    </button>
-                </div>
-            </div>
-
-            <!-- منوی موبایل -->
-            <div id="mobile-menu" class="md:hidden hidden mt-4 pt-4 border-t border-gray-100">
-                <div class="flex flex-col space-y-1" id="mobile-menu-items"></div>
-            </div>
-        </nav>
-
-        <!-- ==================== محتوای اصلی ==================== -->
+        <!-- ===== هدر صفحه ===== -->
         <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
             <div>
                 <h1 class="text-2xl font-bold text-green-700">🌾 مدیریت مزارع</h1>
-                <p class="text-gray-600 text-sm">مشاهده و مدیریت تمام مزارع شما</p>
+                <p class="text-gray-600 text-sm">برای مشاهده و تحلیل، روی هر مزرعه کلیک کنید</p>
             </div>
-            <div class="flex gap-2">
-                <a href="/map/" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm">
+            <div class="flex flex-wrap gap-2">
+                <a href="/map/" class="btn-primary text-sm">
                     <i class="bi bi-plus-circle ml-1"></i> مزرعه جدید
                 </a>
-                <a href="/dashboard/" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition text-sm">
+                <a href="/dashboard/" class="btn-secondary text-sm">
                     <i class="bi bi-arrow-right ml-1"></i> بازگشت
                 </a>
             </div>
         </div>
 
-        <!-- لیست مزارع -->
+        <!-- ===== لیست مزارع ===== -->
         <div id="farms-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="col-span-full text-center text-gray-500 py-12">در حال بارگذاری...</div>
+            <div class="col-span-full text-center text-gray-500 py-12 bg-white rounded-lg border border-gray-100">در حال بارگذاری...</div>
         </div>
     </div>
 
     <!-- ==================== مودال ویرایش ==================== -->
     <div id="edit-modal" class="modal-overlay">
         <div class="modal-box">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">ویرایش مزرعه</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">✏️ ویرایش مزرعه</h2>
             <form id="edit-form">
                 <input type="hidden" id="edit-farm-id">
+                
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">نام مزرعه *</label>
-                    <input type="text" id="edit-name" required class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                    <input type="text" id="edit-name" required 
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">آدرس</label>
-                    <input type="text" id="edit-address" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                    <input type="text" id="edit-address" 
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">استان</label>
-                    <select id="edit-province" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                    <select id="edit-province" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
                         <option value="تهران">تهران</option>
                         <option value="اصفهان">اصفهان</option>
                         <option value="فارس">فارس</option>
@@ -265,13 +243,14 @@
                 </div>
                 <div class="mb-4">
                     <label class="block text-sm font-medium text-gray-700 mb-1">مساحت (هکتار)</label>
-                    <input type="number" id="edit-area" step="0.01" class="w-full border border-gray-300 rounded-lg px-4 py-2">
+                    <input type="number" id="edit-area" step="0.01" 
+                           class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
                 </div>
                 <div class="flex gap-3">
-                    <button type="submit" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">
+                    <button type="submit" class="flex-1 btn-primary">
                         <i class="bi bi-save ml-1"></i> ذخیره
                     </button>
-                    <button type="button" id="cancel-edit" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition">
+                    <button type="button" id="cancel-edit" class="flex-1 btn-secondary">
                         انصراف
                     </button>
                 </div>
@@ -283,14 +262,14 @@
     <!-- ==================== مودال حذف ==================== -->
     <div id="delete-modal" class="modal-overlay">
         <div class="modal-box">
-            <h2 class="text-xl font-bold text-gray-800 mb-4">حذف مزرعه</h2>
+            <h2 class="text-xl font-bold text-gray-800 mb-4">🗑️ حذف مزرعه</h2>
             <p class="text-gray-600 mb-4">آیا از حذف این مزرعه اطمینان دارید؟ این عمل قابل بازگشت نیست.</p>
             <input type="hidden" id="delete-farm-id">
             <div class="flex gap-3">
-                <button id="confirm-delete" class="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition">
+                <button id="confirm-delete" class="flex-1 btn-danger">
                     <i class="bi bi-trash ml-1"></i> حذف
                 </button>
-                <button id="cancel-delete" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition">
+                <button id="cancel-delete" class="flex-1 btn-secondary">
                     انصراف
                 </button>
             </div>
@@ -298,12 +277,16 @@
         </div>
     </div>
 
+    <!-- ============================================================ -->
+    <!-- JavaScript                                                   -->
+    <!-- ============================================================ -->
     <script>
         const API_BASE = '/api';
 
         // ============================================================
         // ۰. توابع کمکی
         // ============================================================
+        
         function getToken() {
             return localStorage.getItem('access_token');
         }
@@ -316,157 +299,21 @@
             };
         }
 
-        function getUserInfo() {
-            try {
-                const token = getToken();
-                if (!token) return null;
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                return {
-                    username: payload.username || 'کاربر',
-                    role: payload.role || 'کشاورز'
-                };
-            } catch {
-                return null;
-            }
+        function redirectToLogin() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            window.location.href = '/login/';
         }
 
         // ============================================================
-        // منوی مبتنی بر نقش
+        // ۱. بارگذاری مزارع
         // ============================================================
-        function getMenuItems(role) {
-            const allMenus = {
-                'FARMER': [
-                    { url: '/map/', icon: 'bi-map', label: 'نقشه' },
-                    { url: '/dashboard/', icon: 'bi-speedometer2', label: 'داشبورد' },
-                    { url: '/farms/', icon: 'bi-tree', label: 'مزارع' },
-                    { url: '/health-chart/', icon: 'bi-graph-up', label: 'روند سلامت' },
-                    { url: '/expert-request/', icon: 'bi-person-badge', label: 'درخواست کارشناس' },
-                ],
-                'EXPERT': [
-                    { url: '/verify/', icon: 'bi-check-circle', label: 'تأیید نمونه' },
-                    { url: '/expert-request/', icon: 'bi-person-badge', label: 'درخواست‌ها' },
-                    { url: '/dashboard/', icon: 'bi-speedometer2', label: 'داشبورد' },
-                ],
-                'LAB': [
-                    { url: '/lab/', icon: 'bi-flask', label: 'ثبت نمونه' },
-                    { url: '/dashboard/', icon: 'bi-speedometer2', label: 'داشبورد' },
-                ],
-                'CRM': [
-                    { url: '/expert-request/', icon: 'bi-person-badge', label: 'درخواست‌ها' },
-                    { url: '/dashboard/', icon: 'bi-speedometer2', label: 'داشبورد' },
-                ],
-                'ADMIN': [
-                    { url: '/map/', icon: 'bi-map', label: 'نقشه' },
-                    { url: '/dashboard/', icon: 'bi-speedometer2', label: 'داشبورد' },
-                    { url: '/farms/', icon: 'bi-tree', label: 'مزارع' },
-                    { url: '/health-chart/', icon: 'bi-graph-up', label: 'روند سلامت' },
-                    { url: '/expert-request/', icon: 'bi-person-badge', label: 'درخواست کارشناس' },
-                    { url: '/lab/', icon: 'bi-flask', label: 'آزمایشگاه' },
-                    { url: '/verify/', icon: 'bi-check-circle', label: 'تأیید' },
-                ],
-            };
-            return allMenus[role] || allMenus['FARMER'];
-        }
-
-        function loadMenu() {
-            const role = getUserInfo()?.role || 'FARMER';
-            const menuItems = getMenuItems(role);
-            
-            const mainMenu = document.getElementById('main-menu');
-            const mobileMenu = document.getElementById('mobile-menu-items');
-            
-            if (mainMenu) {
-                mainMenu.innerHTML = menuItems.map(item => `
-                    <a href="${item.url}" class="nav-link ${window.location.pathname === item.url ? 'active' : ''}">
-                        <i class="bi ${item.icon}"></i> ${item.label}
-                    </a>
-                `).join('');
-            }
-            
-            if (mobileMenu) {
-                mobileMenu.innerHTML = menuItems.map(item => `
-                    <a href="${item.url}" class="nav-link block ${window.location.pathname === item.url ? 'active' : ''}">
-                        <i class="bi ${item.icon} ml-2"></i> ${item.label}
-                    </a>
-                `).join('');
-            }
-        }
-
-        // ============================================================
-        // بررسی دسترسی به صفحه
-        // ============================================================
-        function checkPageAccess() {
-            const role = getUserInfo()?.role || 'FARMER';
-            const currentPath = window.location.pathname;
-            
-            const rolePages = {
-                'FARMER': ['/', '/map/', '/dashboard/', '/farms/', '/health-chart/', '/expert-request/', '/profile/', '/subscription/'],
-                'EXPERT': ['/', '/verify/', '/expert-request/', '/profile/', '/dashboard/'],
-                'LAB': ['/', '/lab/', '/profile/', '/dashboard/'],
-                'CRM': ['/', '/expert-request/', '/profile/', '/dashboard/'],
-                'ADMIN': ['/', '/map/', '/dashboard/', '/farms/', '/health-chart/', '/expert-request/', '/lab/', '/verify/', '/profile/', '/subscription/'],
-            };
-            
-            const allowedPages = rolePages[role] || rolePages['FARMER'];
-            
-            if (!allowedPages.includes(currentPath)) {
-                const redirectMap = {
-                    'FARMER': '/map/',
-                    'EXPERT': '/verify/',
-                    'LAB': '/lab/',
-                    'CRM': '/expert-request/',
-                    'ADMIN': '/',
-                };
-                window.location.href = redirectMap[role] || '/';
-                return false;
-            }
-            return true;
-        }
-
-        // ============================================================
-        // منوها
-        // ============================================================
-        document.getElementById('user-menu-btn').addEventListener('click', function(e) {
-            e.stopPropagation();
-            document.getElementById('user-dropdown').classList.toggle('open');
-        });
-
-        document.addEventListener('click', function() {
-            document.getElementById('user-dropdown').classList.remove('open');
-        });
-
-        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
-        });
-
-        function updateUserUI() {
-            const info = getUserInfo();
-            if (info) {
-                document.getElementById('user-name').textContent = info.username;
-                document.getElementById('user-role').textContent = info.role;
-                document.getElementById('user-avatar').textContent = info.username.charAt(0).toUpperCase();
-            }
-        }
-
-        // ============================================================
-        // خروج
-        // ============================================================
-        document.getElementById('logout-btn').addEventListener('click', function() {
-            if (confirm('آیا مطمئن هستید که می‌خواهید خارج شوید؟')) {
-                localStorage.removeItem('access_token');
-                localStorage.removeItem('refresh_token');
-                window.location.href = '/login/';
-            }
-        });
-
-        // ============================================================
-        // بارگذاری مزارع
-        // ============================================================
+        
         async function loadFarms() {
             try {
                 const token = getToken();
                 if (!token) {
-                    window.location.href = '/login/';
+                    redirectToLogin();
                     return;
                 }
 
@@ -475,9 +322,7 @@
                 });
 
                 if (response.status === 401) {
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
-                    window.location.href = '/login/';
+                    redirectToLogin();
                     return;
                 }
 
@@ -487,7 +332,6 @@
 
                 let farms = await response.json();
                 
-                // اگر data.results وجود داشت ازش استفاده کن
                 if (farms.results && Array.isArray(farms.results)) {
                     farms = farms.results;
                 } else if (!Array.isArray(farms)) {
@@ -499,7 +343,7 @@
             } catch (error) {
                 console.error('Error loading farms:', error);
                 document.getElementById('farms-container').innerHTML = `
-                    <div class="col-span-full text-center text-red-600 py-12">
+                    <div class="col-span-full text-center text-red-600 py-12 bg-white rounded-lg border border-gray-100">
                         <i class="bi bi-exclamation-triangle text-2xl"></i>
                         <p class="mt-2">خطا در بارگذاری مزارع: ${error.message}</p>
                     </div>
@@ -508,53 +352,55 @@
         }
 
         // ============================================================
-        // نمایش مزارع
+        // ۲. نمایش مزارع (با قابلیت کلیک روی کارت)
         // ============================================================
+        
         function displayFarms(farms) {
             const container = document.getElementById('farms-container');
 
             if (!farms || !Array.isArray(farms) || farms.length === 0) {
                 container.innerHTML = `
-                    <div class="col-span-full text-center text-gray-500 py-12">
+                    <div class="col-span-full text-center text-gray-500 py-12 bg-white rounded-lg border border-gray-100">
                         <i class="bi bi-inbox text-4xl"></i>
                         <p class="mt-2">هیچ مزرعه‌ای ثبت نشده است</p>
-                        <a href="/map/" class="text-green-600 hover:underline">ثبت مزرعه جدید</a>
+                        <a href="/map/" class="text-green-600 hover:underline inline-flex items-center gap-1">
+                            <i class="bi bi-plus-circle"></i> ثبت مزرعه جدید
+                        </a>
                     </div>
                 `;
                 return;
             }
 
             container.innerHTML = farms.map(farm => `
-                <div class="farm-card">
+                <div class="farm-card" onclick="goToFarmMap(${farm.id})">
                     <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="text-lg font-bold text-gray-800">${farm.name || 'نامشخص'}</h3>
+                        <div class="flex-1">
+                            <h3 class="text-lg font-bold text-gray-800 farm-name">${farm.name || 'نامشخص'}</h3>
                             <div class="text-sm text-gray-600">${farm.address || 'آدرس نامشخص'}</div>
-                            <div class="text-sm text-gray-600">${farm.province_name || 'استان نامشخص'}</div>
+                            <div class="text-sm text-gray-600">${farm.province_name || farm.province || 'استان نامشخص'}</div>
                             <div class="text-sm text-gray-600">مساحت: ${farm.area_display || (farm.area ? farm.area + ' هکتار' : 'نامشخص')}</div>
                             <div class="text-xs text-gray-400 mt-1">ثبت: ${farm.created_at ? new Date(farm.created_at).toLocaleDateString('fa-IR') : 'نامشخص'}</div>
                         </div>
-                        <div class="flex flex-col gap-1">
+                        <div class="flex flex-col items-end gap-1">
                             <span class="status-badge status-active">فعال</span>
-                            <button onclick="viewFarmOnMap(${farm.id})" class="text-blue-600 hover:text-blue-700 text-sm">
-                                <i class="bi bi-eye ml-1"></i> نقشه
-                            </button>
+                            <span class="text-xs text-gray-400"><i class="bi bi-arrow-left"></i> کلیک کنید</span>
                         </div>
                     </div>
 
                     <div id="mini-map-${farm.id}" class="mini-map"></div>
 
-                    <div class="flex gap-2 mt-3 pt-3 border-t">
-                        <button onclick="editFarm(${farm.id})" class="flex-1 bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition">
+                    <div class="card-actions flex gap-2 mt-3 pt-3 border-t border-gray-100" onclick="event.stopPropagation();">
+                        <button onclick="editFarm(${farm.id})" class="flex-1 btn-blue text-sm">
                             <i class="bi bi-pencil ml-1"></i> ویرایش
                         </button>
-                        <button onclick="deleteFarm(${farm.id})" class="flex-1 bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700 transition">
+                        <button onclick="deleteFarm(${farm.id})" class="flex-1 btn-danger text-sm">
                             <i class="bi bi-trash ml-1"></i> حذف
                         </button>
                     </div>
                 </div>
             `).join('');
 
+            // بارگذاری نقشه‌های کوچک
             farms.forEach(farm => {
                 if (farm.geometry_coords && farm.geometry_coords.length > 0) {
                     loadMiniMap(farm.id, farm.geometry_coords);
@@ -563,61 +409,79 @@
         }
 
         // ============================================================
-        // نقشه کوچک
+        // ۳. هدایت به نقشه با پارامتر farm_id
         // ============================================================
+        
+        function goToFarmMap(farmId) {
+            window.location.href = `/map/?farm_id=${farmId}`;
+        }
+
+        // ============================================================
+        // ۴. نقشه کوچک
+        // ============================================================
+        
         function loadMiniMap(farmId, coordinates) {
             const container = document.getElementById(`mini-map-${farmId}`);
             if (!container) return;
             
-            const map = L.map(container).setView([32.5, 54.5], 5);
-            
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(map);
-            
-            if (coordinates && coordinates.length > 0) {
-                const polygon = L.polygon(coordinates, {
-                    color: '#2e7d32',
-                    weight: 2,
-                    fillOpacity: 0.1
+            try {
+                const map = L.map(container).setView([32.5, 54.5], 5);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '&copy; OpenStreetMap contributors'
                 }).addTo(map);
-                map.fitBounds(polygon.getBounds());
+                
+                if (coordinates && coordinates.length > 0) {
+                    const polygon = L.polygon(coordinates, {
+                        color: '#0d9488',
+                        weight: 2,
+                        fillOpacity: 0.1
+                    }).addTo(map);
+                    map.fitBounds(polygon.getBounds());
+                }
+                
+                // غیرفعال کردن تعاملات
+                map.dragging.disable();
+                map.touchZoom.disable();
+                map.doubleClickZoom.disable();
+                map.scrollWheelZoom.disable();
+                map.boxZoom.disable();
+                map.keyboard.disable();
+                
+                setTimeout(() => {
+                    map.invalidateSize();
+                }, 200);
+            } catch (e) {
+                console.warn('Error loading mini map:', e);
+                container.innerHTML = `
+                    <div class="flex items-center justify-center text-gray-400 text-sm h-full">
+                        <i class="bi bi-map ml-2"></i> نقشه در دسترس نیست
+                    </div>
+                `;
             }
-            
-            map.dragging.disable();
-            map.touchZoom.disable();
-            map.doubleClickZoom.disable();
-            map.scrollWheelZoom.disable();
-            map.boxZoom.disable();
-            map.keyboard.disable();
-            
-            setTimeout(() => {
-                map.invalidateSize();
-            }, 100);
         }
 
         // ============================================================
-        // ویرایش مزرعه
+        // ۵. ویرایش مزرعه
         // ============================================================
+        
         function editFarm(farmId) {
+            event.stopPropagation();
             const token = getToken();
             fetch(`${API_BASE}/farms/${farmId}/`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
             .then(res => {
                 if (res.status === 401) {
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
-                    window.location.href = '/login/';
+                    redirectToLogin();
                     throw new Error('لطفاً وارد شوید');
                 }
                 return res.json();
             })
             .then(farm => {
                 document.getElementById('edit-farm-id').value = farm.id;
-                document.getElementById('edit-name').value = farm.name;
+                document.getElementById('edit-name').value = farm.name || '';
                 document.getElementById('edit-address').value = farm.address || '';
-                document.getElementById('edit-province').value = farm.province_name || 'تهران';
+                document.getElementById('edit-province').value = farm.province_name || farm.province || 'تهران';
                 document.getElementById('edit-area').value = farm.area || '';
                 document.getElementById('edit-modal').classList.add('active');
                 document.getElementById('edit-message').classList.add('hidden');
@@ -628,8 +492,9 @@
         }
 
         // ============================================================
-        // ذخیره ویرایش
+        // ۶. ذخیره ویرایش
         // ============================================================
+        
         document.getElementById('edit-form').addEventListener('submit', async function(e) {
             e.preventDefault();
 
@@ -651,9 +516,7 @@
                 });
 
                 if (response.status === 401) {
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
-                    window.location.href = '/login/';
+                    redirectToLogin();
                     return;
                 }
 
@@ -679,9 +542,11 @@
         });
 
         // ============================================================
-        // حذف مزرعه
+        // ۷. حذف مزرعه
         // ============================================================
+        
         function deleteFarm(farmId) {
+            event.stopPropagation();
             document.getElementById('delete-farm-id').value = farmId;
             document.getElementById('delete-modal').classList.add('active');
             document.getElementById('delete-message').classList.add('hidden');
@@ -698,9 +563,7 @@
                 });
 
                 if (response.status === 401) {
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
-                    window.location.href = '/login/';
+                    redirectToLogin();
                     return;
                 }
 
@@ -726,8 +589,9 @@
         });
 
         // ============================================================
-        // بستن مودال‌ها
+        // ۸. بستن مودال‌ها
         // ============================================================
+        
         document.getElementById('cancel-edit').addEventListener('click', function() {
             document.getElementById('edit-modal').classList.remove('active');
         });
@@ -737,32 +601,16 @@
         });
 
         // ============================================================
-        // دکمه مشاهده روی نقشه
+        // ۹. بارگذاری اولیه
         // ============================================================
-        function viewFarmOnMap(farmId) {
-            window.location.href = `/map/?farm_id=${farmId}`;
-        }
-
-        // ============================================================
-        // بارگذاری اولیه
-        // ============================================================
+        
         document.addEventListener('DOMContentLoaded', function() {
             const token = getToken();
             if (!token) {
-                window.location.href = '/login/';
+                redirectToLogin();
                 return;
             }
             
-            // بررسی دسترسی
-            if (!checkPageAccess()) return;
-            
-            // بارگذاری منو
-            loadMenu();
-            
-            // به‌روزرسانی اطلاعات کاربر
-            updateUserUI();
-            
-            // بارگذاری مزارع
             loadFarms();
         });
     </script>

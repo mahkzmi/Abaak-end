@@ -4,58 +4,218 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ثبت‌نام - آباک</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- فونت و آیکون‌ها -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
     <style>
+        * {
+            font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdfa 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .register-card {
+            background: white;
+            border-radius: 24px;
+            padding: 32px;
+            max-width: 480px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(13, 148, 136, 0.12);
+            border: 1px solid rgba(13, 148, 136, 0.08);
+        }
+        
         .role-card {
             border: 2px solid #e5e7eb;
             border-radius: 12px;
-            padding: 16px;
+            padding: 14px 12px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
+            background: white;
         }
         .role-card:hover {
-            border-color: #2e7d32;
+            border-color: #0d9488;
+            transform: translateY(-2px);
         }
         .role-card.selected {
-            border-color: #2e7d32;
-            background: #f0fdf4;
-            box-shadow: 0 4px 12px rgba(46, 125, 50, 0.15);
+            border-color: #0d9488;
+            background: #f0fdfa;
+            box-shadow: 0 4px 16px rgba(13, 148, 136, 0.12);
         }
         .role-card input[type="radio"] {
             display: none;
         }
         .role-icon {
-            font-size: 32px;
+            font-size: 28px;
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }
         .role-name {
             font-weight: 600;
             color: #1f2937;
+            font-size: 14px;
         }
         .role-desc {
-            font-size: 12px;
+            font-size: 11px;
             color: #6b7280;
+            margin-top: 2px;
+        }
+        
+        .btn-primary {
+            background: #0d9488;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            transition: all 0.3s;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+        .btn-primary:hover {
+            background: #0f766e;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(13, 148, 136, 0.3);
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .form-input {
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 14px;
+            transition: all 0.2s;
+            font-size: 14px;
+            background: #fafcff;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #0d9488;
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+            background: white;
+        }
+        .form-input.error {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+        .form-label .required {
+            color: #ef4444;
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        .input-group .form-input {
+            padding-right: 44px;
+        }
+        .input-group .input-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 18px;
+        }
+        
+        .message-box {
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            display: none;
+        }
+        .message-box.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+        .message-box.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        .message-box.info {
+            display: block;
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        
+        .password-hint {
+            font-size: 12px;
+            color: #94a3b8;
             margin-top: 4px;
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 16px 0;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e2e8f0;
+        }
+        
+        /* Spinner انیمیشن */
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
     </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center">
-    <div class="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full mx-4">
+<body>
+
+    <div class="register-card">
+        <!-- ===== لوگو ===== -->
         <div class="text-center mb-6">
-            <div class="flex items-center justify-center">
-                <i class="bi bi-tree-fill text-3xl text-green-700"></i>
-                <span class="text-2xl font-bold text-green-700 mr-2">آباک</span>
+            <div class="flex items-center justify-center gap-2">
+                <i class="bi bi-tree-fill text-3xl text-emerald-600"></i>
+                <span class="text-2xl font-bold text-emerald-700">آباک</span>
             </div>
-            <h2 class="text-xl font-bold text-gray-800 mt-4">ثبت‌نام در آباک</h2>
-            <p class="text-gray-600 text-sm">نقش خود را انتخاب کنید</p>
+            <h2 class="text-xl font-bold text-gray-800 mt-3">ثبت‌نام در آباک</h2>
+            <p class="text-gray-500 text-sm">نقش خود را انتخاب کنید و ثبت‌نام را کامل کنید</p>
         </div>
 
-        <!-- انتخاب نقش -->
-        <div class="grid grid-cols-2 gap-3 mb-6">
-            <label class="role-card" data-role="FARMER">
+        <!-- ===== انتخاب نقش ===== -->
+        <div class="grid grid-cols-2 gap-3 mb-5">
+            <label class="role-card selected" data-role="FARMER">
                 <input type="radio" name="role" value="FARMER" checked>
                 <span class="role-icon">🌾</span>
                 <div class="role-name">کشاورز</div>
@@ -79,131 +239,245 @@
                 <div class="role-name">پشتیبانی (CRM)</div>
                 <div class="role-desc">مدیریت درخواست‌ها</div>
             </label>
-            <label class="role-card col-span-2" data-role="ADMIN">
-                <input type="radio" name="role" value="ADMIN">
-                <span class="role-icon">👑</span>
-                <div class="role-name">مدیر سیستم</div>
-                <div class="role-desc">دسترسی کامل به همه بخش‌ها</div>
-            </label>
         </div>
 
-        <!-- فرم ثبت‌نام -->
+        <!-- ===== فرم ثبت‌نام ===== -->
         <form id="register-form" class="space-y-3">
             <input type="hidden" id="role-input" value="FARMER">
-            
+
+            <!-- نام کاربری -->
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">نام کاربری *</label>
-                <input type="text" id="username" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">ایمیل</label>
-                <input type="email" id="email" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">نام</label>
-                <input type="text" id="first_name" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">نام خانوادگی</label>
-                <input type="text" id="last_name" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">شماره موبایل *</label>
-                <input type="text" id="phone" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="۰۹۱۲۳۴۵۶۷۸۹">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">کد ملی *</label>
-                <input type="text" id="national_id" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">رمز عبور *</label>
-                <input type="password" id="password" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">تکرار رمز عبور *</label>
-                <input type="password" id="password2" required class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                <label class="form-label">نام کاربری <span class="required">*</span></label>
+                <div class="input-group">
+                    <i class="bi bi-person input-icon"></i>
+                    <input type="text" id="username" required class="form-input" placeholder="نام کاربری خود را وارد کنید">
+                </div>
             </div>
 
-            <button type="submit" class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-medium">
-                <i class="bi bi-person-plus ml-1"></i> ثبت‌نام
+            <!-- ایمیل -->
+            <div>
+                <label class="form-label">ایمیل</label>
+                <div class="input-group">
+                    <i class="bi bi-envelope input-icon"></i>
+                    <input type="email" id="email" class="form-input" placeholder="example@email.com">
+                </div>
+            </div>
+
+            <!-- نام و نام خانوادگی -->
+            <div class="grid grid-cols-2 gap-3">
+                <div>
+                    <label class="form-label">نام</label>
+                    <input type="text" id="first_name" class="form-input" placeholder="نام">
+                </div>
+                <div>
+                    <label class="form-label">نام خانوادگی</label>
+                    <input type="text" id="last_name" class="form-input" placeholder="نام خانوادگی">
+                </div>
+            </div>
+
+            <!-- شماره موبایل -->
+            <div>
+                <label class="form-label">شماره موبایل <span class="required">*</span></label>
+                <div class="input-group">
+                    <i class="bi bi-phone input-icon"></i>
+                    <input type="tel" id="phone" required class="form-input" placeholder="۰۹۱۲۳۴۵۶۷۸۹">
+                </div>
+            </div>
+
+            <!-- کد ملی -->
+            <div>
+                <label class="form-label">کد ملی <span class="required">*</span></label>
+                <div class="input-group">
+                    <i class="bi bi-credit-card input-icon"></i>
+                    <input type="text" id="national_id" required class="form-input" placeholder="کد ملی ۱۰ رقمی">
+                </div>
+            </div>
+
+            <!-- رمز عبور -->
+            <div>
+                <label class="form-label">رمز عبور <span class="required">*</span></label>
+                <div class="input-group">
+                    <i class="bi bi-lock input-icon"></i>
+                    <input type="password" id="password" required class="form-input" placeholder="حداقل ۸ کاراکتر">
+                </div>
+                <div class="password-hint">رمز عبور باید حداقل ۸ کاراکتر باشد</div>
+            </div>
+
+            <!-- تکرار رمز عبور -->
+            <div>
+                <label class="form-label">تکرار رمز عبور <span class="required">*</span></label>
+                <div class="input-group">
+                    <i class="bi bi-lock-fill input-icon"></i>
+                    <input type="password" id="password2" required class="form-input" placeholder="رمز عبور را دوباره وارد کنید">
+                </div>
+            </div>
+
+            <!-- دکمه ثبت‌نام -->
+            <button type="submit" id="submit-btn" class="btn-primary mt-2">
+                <i class="bi bi-person-plus"></i>
+                ثبت‌نام
             </button>
         </form>
 
-        <div id="message" class="mt-4 hidden"></div>
+        <!-- ===== پیام ===== -->
+        <div id="message" class="message-box mt-4"></div>
 
-        <p class="text-center text-sm text-gray-600 mt-6">
+        <!-- ===== لینک ورود ===== -->
+        <div class="divider">یا</div>
+
+        <p class="text-center text-sm text-gray-600">
             قبلاً ثبت‌نام کرده‌اید؟
-            <a href="/login/" class="text-green-600 hover:underline">وارد شوید</a>
+            <a href="/login/" class="text-emerald-600 font-medium hover:text-emerald-700 hover:underline transition">
+                وارد شوید
+            </a>
         </p>
     </div>
 
+    <!-- ============================================================ -->
+    <!-- JavaScript                                                   -->
+    <!-- ============================================================ -->
     <script>
-        // ============================================================
-        // انتخاب نقش
-        // ============================================================
-        document.querySelectorAll('.role-card').forEach(card => {
-            card.addEventListener('click', function() {
-                document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
-                this.classList.add('selected');
-                const radio = this.querySelector('input[type="radio"]');
-                radio.checked = true;
-                document.getElementById('role-input').value = radio.value;
-            });
-        });
+        (function() {
+            'use strict';
 
-        // ============================================================
-        // ثبت‌نام
-        // ============================================================
-        document.getElementById('register-form').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const data = {
-                username: document.getElementById('username').value.trim(),
-                email: document.getElementById('email').value.trim(),
-                first_name: document.getElementById('first_name').value.trim(),
-                last_name: document.getElementById('last_name').value.trim(),
-                phone: document.getElementById('phone').value.trim(),
-                national_id: document.getElementById('national_id').value.trim(),
-                password: document.getElementById('password').value,
-                password2: document.getElementById('password2').value,
-                role: document.getElementById('role-input').value,
-            };
-
-            const messageDiv = document.getElementById('message');
-
-            try {
-                const response = await fetch('/api/register/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
+            // ============================================================
+            // انتخاب نقش
+            // ============================================================
+            
+            document.querySelectorAll('.role-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    document.querySelectorAll('.role-card').forEach(c => c.classList.remove('selected'));
+                    this.classList.add('selected');
+                    const radio = this.querySelector('input[type="radio"]');
+                    radio.checked = true;
+                    document.getElementById('role-input').value = radio.value;
                 });
+            });
 
-                const result = await response.json();
-
-                if (response.ok && result.success) {
-                    messageDiv.className = 'mt-4 p-3 bg-green-100 text-green-700 rounded-lg';
-                    messageDiv.textContent = '✅ ' + result.message;
-
-                    localStorage.setItem('access_token', result.tokens.access);
-                    localStorage.setItem('refresh_token', result.tokens.refresh);
-                    localStorage.setItem('user_role', data.role);
-
-                    setTimeout(() => {
-                        window.location.href = '/';
-                    }, 1500);
-                } else {
-                    let errorMsg = Object.values(result).flat().join(' | ');
-                    messageDiv.className = 'mt-4 p-3 bg-red-100 text-red-700 rounded-lg';
-                    messageDiv.textContent = '❌ ' + (errorMsg || 'خطا در ثبت‌نام');
+            // ============================================================
+            // اعتبارسنجی فرم
+            // ============================================================
+            
+            function validateForm(data) {
+                const errors = [];
+                
+                // نام کاربری
+                if (!data.username || data.username.length < 3) {
+                    errors.push('نام کاربری باید حداقل ۳ کاراکتر باشد');
                 }
-                messageDiv.classList.remove('hidden');
-
-            } catch (error) {
-                messageDiv.className = 'mt-4 p-3 bg-red-100 text-red-700 rounded-lg';
-                messageDiv.textContent = '❌ خطا: ' + error.message;
-                messageDiv.classList.remove('hidden');
+                if (!/^[a-zA-Z0-9_\u0600-\u06FF]+$/.test(data.username)) {
+                    errors.push('نام کاربری فقط شامل حروف، اعداد و زیرخط باشد');
+                }
+                
+                // ایمیل (اختیاری اما اگر وارد شده باید معتبر باشد)
+                if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+                    errors.push('ایمیل معتبر نیست');
+                }
+                
+                // شماره موبایل
+                if (!data.phone || !/^09[0-9]{9}$/.test(data.phone)) {
+                    errors.push('شماره موبایل معتبر نیست (۰۹XXXXXXXXX)');
+                }
+                
+                // کد ملی
+                if (!data.national_id || !/^[0-9]{10}$/.test(data.national_id)) {
+                    errors.push('کد ملی باید ۱۰ رقمی باشد');
+                }
+                
+                // رمز عبور
+                if (!data.password || data.password.length < 8) {
+                    errors.push('رمز عبور باید حداقل ۸ کاراکتر باشد');
+                }
+                if (data.password !== data.password2) {
+                    errors.push('رمز عبور و تکرار آن مطابقت ندارند');
+                }
+                
+                return errors;
             }
-        });
+
+            // ============================================================
+            // ثبت‌نام
+            // ============================================================
+            
+            const form = document.getElementById('register-form');
+            const messageDiv = document.getElementById('message');
+            const submitBtn = document.getElementById('submit-btn');
+
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const data = {
+                    username: document.getElementById('username').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    first_name: document.getElementById('first_name').value.trim(),
+                    last_name: document.getElementById('last_name').value.trim(),
+                    phone: document.getElementById('phone').value.trim(),
+                    national_id: document.getElementById('national_id').value.trim(),
+                    password: document.getElementById('password').value,
+                    password2: document.getElementById('password2').value,
+                    role: document.getElementById('role-input').value,
+                };
+
+                // ===== اعتبارسنجی سمت کلاینت =====
+                const validationErrors = validateForm(data);
+                if (validationErrors.length > 0) {
+                    messageDiv.className = 'message-box error';
+                    messageDiv.innerHTML = '❌ ' + validationErrors.join('<br>');
+                    return;
+                }
+
+                // ===== غیرفعال کردن دکمه =====
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="bi bi-hourglass-split ml-1 animate-spin"></i> در حال ثبت‌نام...';
+
+                try {
+                    const response = await fetch('/api/register/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data)
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        messageDiv.className = 'message-box success';
+                        messageDiv.innerHTML = '✅ ' + result.message;
+
+                        // ===== ذخیره توکن‌ها =====
+                        if (result.tokens) {
+                            localStorage.setItem('access_token', result.tokens.access);
+                            localStorage.setItem('refresh_token', result.tokens.refresh);
+                        }
+                        localStorage.setItem('user_role', data.role);
+
+                        // ===== هدایت به صفحه اصلی =====
+                        setTimeout(() => {
+                            window.location.href = '/';
+                        }, 1500);
+                    } else {
+                        let errorMsg = result.error || result.message || 'خطا در ثبت‌نام';
+                        if (result.details) {
+                            const details = Object.entries(result.details)
+                                .map(([key, errors]) => `${key}: ${errors.join(', ')}`)
+                                .join(' | ');
+                            errorMsg += ` (${details})`;
+                        }
+                        messageDiv.className = 'message-box error';
+                        messageDiv.innerHTML = '❌ ' + errorMsg;
+                    }
+
+                } catch (error) {
+                    messageDiv.className = 'message-box error';
+                    messageDiv.innerHTML = '❌ خطا در ارتباط با سرور: ' + error.message;
+                } finally {
+                    // ===== فعال کردن دکمه =====
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-person-plus ml-1"></i> ثبت‌نام';
+                }
+            });
+
+        })();
     </script>
+
 </body>
 </html>

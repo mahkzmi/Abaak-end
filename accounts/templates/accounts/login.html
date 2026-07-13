@@ -4,90 +4,371 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ورود - آباک</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- فونت و آیکون‌ها -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        * {
+            font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #f0fdfa 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .login-card {
+            background: white;
+            border-radius: 24px;
+            padding: 36px 32px;
+            max-width: 440px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(13, 148, 136, 0.12);
+            border: 1px solid rgba(13, 148, 136, 0.08);
+        }
+        
+        .form-input {
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 10px 14px;
+            transition: all 0.2s;
+            font-size: 14px;
+            background: #fafcff;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #0d9488;
+            box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+            background: white;
+        }
+        .form-input.error {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+        .form-label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 4px;
+        }
+        .form-label .required {
+            color: #ef4444;
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        .input-group .form-input {
+            padding-right: 44px;
+        }
+        .input-group .input-icon {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #94a3b8;
+            font-size: 18px;
+        }
+        
+        .btn-primary {
+            background: #0d9488;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            transition: all 0.3s;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+        .btn-primary:hover {
+            background: #0f766e;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(13, 148, 136, 0.3);
+        }
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .message-box {
+            padding: 12px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            display: none;
+        }
+        .message-box.success {
+            display: block;
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+        .message-box.error {
+            display: block;
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        .message-box.info {
+            display: block;
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 16px 0;
+            color: #94a3b8;
+            font-size: 13px;
+        }
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e2e8f0;
+        }
+        
+        .password-toggle {
+            position: absolute;
+            left: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 18px;
+            padding: 0;
+            transition: color 0.2s;
+        }
+        .password-toggle:hover {
+            color: #0d9488;
+        }
+        
+        .forgot-password {
+            font-size: 13px;
+            color: #0d9488;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .forgot-password:hover {
+            color: #0f766e;
+            text-decoration: underline;
+        }
+        
+        .animate-spin {
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
-<body class="bg-gray-50 min-h-screen flex items-center justify-center">
-    <div class="bg-white rounded-2xl shadow-lg p-8 max-w-md w-full mx-4">
-        <div class="text-center mb-8">
-            <div class="flex items-center justify-center">
-                <i class="bi bi-tree-fill text-3xl text-green-700"></i>
-                <span class="text-2xl font-bold text-green-700 mr-2">آباک</span>
+<body>
+
+    <div class="login-card">
+        <!-- ===== لوگو ===== -->
+        <div class="text-center mb-6">
+            <div class="flex items-center justify-center gap-2">
+                <i class="bi bi-tree-fill text-3xl text-emerald-600"></i>
+                <span class="text-2xl font-bold text-emerald-700">آباک</span>
             </div>
-            <h2 class="text-xl font-bold text-gray-800 mt-4">ورود به آباک</h2>
-            <p class="text-gray-600 text-sm">به سامانه هوشمند تحلیل خاک خوش آمدید</p>
+            <h2 class="text-xl font-bold text-gray-800 mt-3">ورود به آباک</h2>
+            <p class="text-gray-500 text-sm">به سامانه هوشمند تحلیل خاک خوش آمدید</p>
         </div>
 
+        <!-- ===== فرم ورود ===== -->
         <form id="login-form" class="space-y-4">
+            <!-- نام کاربری -->
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">نام کاربری *</label>
-                <input type="text" id="username" required
-                       class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
-            </div>
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">رمز عبور *</label>
-                <input type="password" id="password" required
-                       class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                <label class="form-label">نام کاربری <span class="required">*</span></label>
+                <div class="input-group">
+                    <i class="bi bi-person input-icon"></i>
+                    <input type="text" id="username" required class="form-input" placeholder="نام کاربری خود را وارد کنید">
+                </div>
             </div>
 
-            <button type="submit"
-                    class="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-medium">
-                <i class="bi bi-box-arrow-in-right ml-1"></i> ورود
+            <!-- رمز عبور -->
+            <div>
+                <label class="form-label">رمز عبور <span class="required">*</span></label>
+                <div class="input-group">
+                    <i class="bi bi-lock input-icon"></i>
+                    <input type="password" id="password" required class="form-input" placeholder="رمز عبور خود را وارد کنید">
+                    <button type="button" id="password-toggle" class="password-toggle" aria-label="نمایش/مخفی کردن رمز">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- فراموشی رمز + ذخیره‌سازی -->
+            <div class="flex items-center justify-between">
+                <label class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+                    <input type="checkbox" id="remember-me" class="w-4 h-4 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
+                    مرا به خاطر بسپار
+                </label>
+                <a href="#" class="forgot-password">فراموشی رمز عبور؟</a>
+            </div>
+
+            <!-- دکمه ورود -->
+            <button type="submit" id="submit-btn" class="btn-primary mt-2">
+                <i class="bi bi-box-arrow-in-right"></i>
+                ورود
             </button>
         </form>
 
-        <div id="message" class="mt-4 hidden"></div>
+        <!-- ===== پیام ===== -->
+        <div id="message" class="message-box mt-4"></div>
 
-        <p class="text-center text-sm text-gray-600 mt-6">
+        <!-- ===== لینک ثبت‌نام ===== -->
+        <div class="divider">یا</div>
+
+        <p class="text-center text-sm text-gray-600">
             ثبت‌نام نکرده‌اید؟
-            <a href="/register/" class="text-green-600 hover:underline">ثبت‌نام کنید</a>
+            <a href="/register/" class="text-emerald-600 font-medium hover:text-emerald-700 hover:underline transition">
+                ثبت‌نام کنید
+            </a>
         </p>
     </div>
 
+    <!-- ============================================================ -->
+    <!-- JavaScript                                                   -->
+    <!-- ============================================================ -->
     <script>
-        document.getElementById('login-form').addEventListener('submit', async function(e) {
-    e.preventDefault();
+        (function() {
+            'use strict';
 
-    const data = {
-        username: document.getElementById('username').value.trim(),
-        password: document.getElementById('password').value,
-    };
+            // ============================================================
+            // نمایش/مخفی کردن رمز عبور
+            // ============================================================
+            
+            const toggleBtn = document.getElementById('password-toggle');
+            const passwordInput = document.getElementById('password');
+            let isPasswordVisible = false;
 
-    const messageDiv = document.getElementById('message');
+            toggleBtn.addEventListener('click', function() {
+                isPasswordVisible = !isPasswordVisible;
+                passwordInput.type = isPasswordVisible ? 'text' : 'password';
+                this.querySelector('i').className = isPasswordVisible ? 'bi bi-eye-slash' : 'bi bi-eye';
+                this.setAttribute('aria-label', isPasswordVisible ? 'مخفی کردن رمز' : 'نمایش رمز');
+            });
 
-    try {
-        const response = await fetch('/api/login/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
-        });
+            // ============================================================
+            // ورود
+            // ============================================================
+            
+            const form = document.getElementById('login-form');
+            const messageDiv = document.getElementById('message');
+            const submitBtn = document.getElementById('submit-btn');
 
-        const result = await response.json();
+            form.addEventListener('submit', async function(e) {
+                e.preventDefault();
 
-        if (response.ok) {
-            messageDiv.className = 'mt-4 p-3 bg-green-100 text-green-700 rounded-lg';
-            messageDiv.textContent = '✅ ورود با موفقیت انجام شد';
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value;
 
-            // ذخیره توکن‌ها
-            localStorage.setItem('access_token', result.access);
-            localStorage.setItem('refresh_token', result.refresh);
+                // ===== اعتبارسنجی ساده =====
+                if (!username || !password) {
+                    messageDiv.className = 'message-box error';
+                    messageDiv.innerHTML = '❌ لطفاً نام کاربری و رمز عبور را وارد کنید';
+                    return;
+                }
 
-            // انتقال به صفحه نقشه (map)
-            setTimeout(() => {
-                window.location.href = '/map/';  // ← این رو به /map/ تغییر بده
-            }, 1000);
-        } else {
-            messageDiv.className = 'mt-4 p-3 bg-red-100 text-red-700 rounded-lg';
-            messageDiv.textContent = '❌ ' + (result.detail || 'نام کاربری یا رمز عبور اشتباه است');
-        }
-        messageDiv.classList.remove('hidden');
+                // ===== غیرفعال کردن دکمه =====
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<i class="bi bi-hourglass-split ml-1 animate-spin"></i> در حال ورود...';
 
-    } catch (error) {
-        messageDiv.className = 'mt-4 p-3 bg-red-100 text-red-700 rounded-lg';
-        messageDiv.textContent = '❌ خطا: ' + error.message;
-        messageDiv.classList.remove('hidden');
-    }
-});
+                try {
+                    const response = await fetch('/api/login/', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.access) {
+                        messageDiv.className = 'message-box success';
+                        messageDiv.innerHTML = '✅ ورود با موفقیت انجام شد';
+
+                        // ===== ذخیره توکن‌ها =====
+                        localStorage.setItem('access_token', result.access);
+                        localStorage.setItem('refresh_token', result.refresh);
+
+                        // ===== ذخیره نقش کاربر (اگر در پاسخ باشد) =====
+                        if (result.role) {
+                            localStorage.setItem('user_role', result.role);
+                        }
+
+                        // ===== هدایت به صفحه نقشه =====
+                        setTimeout(() => {
+                            window.location.href = '/map/';
+                        }, 1000);
+
+                    } else {
+                        let errorMsg = result.detail || result.error || 'نام کاربری یا رمز عبور اشتباه است';
+                        if (result.non_field_errors) {
+                            errorMsg = result.non_field_errors.join(', ');
+                        }
+                        messageDiv.className = 'message-box error';
+                        messageDiv.innerHTML = '❌ ' + errorMsg;
+                    }
+
+                } catch (error) {
+                    messageDiv.className = 'message-box error';
+                    messageDiv.innerHTML = '❌ خطا در ارتباط با سرور: ' + error.message;
+                } finally {
+                    // ===== فعال کردن دکمه =====
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="bi bi-box-arrow-in-right ml-1"></i> ورود';
+                }
+            });
+
+            // ============================================================
+            // Enter کلید برای ارسال فرم
+            // ============================================================
+            
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter') {
+                    const activeElement = document.activeElement;
+                    if (activeElement && (activeElement.id === 'username' || activeElement.id === 'password')) {
+                        form.dispatchEvent(new Event('submit'));
+                    }
+                }
+            });
+
+            // ============================================================
+            // بررسی توکن در localStorage (اگر توکن معتبر بود هدایت شود)
+            // ============================================================
+            
+            const token = localStorage.getItem('access_token');
+            if (token) {
+                // می‌توانید یک درخواست برای بررسی اعتبار توکن بزنید
+                // اگر توکن معتبر بود، کاربر را به صفحه نقشه هدایت کنید
+                // فعلاً این کار را نمی‌کنیم تا کاربر بتواند دوباره وارد شود
+            }
+
+        })();
     </script>
+
 </body>
 </html>

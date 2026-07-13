@@ -4,6 +4,16 @@ from django.views.generic import TemplateView
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from soil.views import ExpertDashboardView
+from django.urls import path
+from django.shortcuts import redirect
+
+def custom_logout(request):
+    """خروج از سیستم و هدایت به صفحه اصلی"""
+    from django.contrib.auth import logout
+    logout(request)
+    return redirect('/')
+
 
 # ============ تنظیمات Swagger ============
 schema_view = get_schema_view(
@@ -67,4 +77,8 @@ urlpatterns = [
     path('health-chart/', TemplateView.as_view(template_name='soil/health_chart.html'), name='health_chart'),
     path('farms/', TemplateView.as_view(template_name='soil/farms.html'), name='farms'),
     path('dashboard/', TemplateView.as_view(template_name='accounts/dashboard.html'), name='dashboard'),
+    path('expert_dashboard/', TemplateView.as_view(template_name='soil/expert_dashboard.html'), name='expert_dashboard'),
+    path('logout/', custom_logout, name='logout'),
+
+
 ]

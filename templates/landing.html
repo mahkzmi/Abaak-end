@@ -10,7 +10,6 @@
     <style>
         * { font-family: 'Vazirmatn', sans-serif; }
         
-        /* رنگ‌بندی جدید و مدرن */
         :root {
             --primary: #0d9488;
             --primary-dark: #0f766e;
@@ -74,7 +73,16 @@
             border-color: white;
         }
 
-        /* هیرو با گرادیانت ملایم و شفاف */
+        .btn-logout {
+            color: #ef4444;
+            transition: all 0.2s;
+        }
+        .btn-logout:hover {
+            background: #fef2f2;
+            color: #dc2626;
+        }
+
+        /* هیرو */
         .hero-section {
             background: linear-gradient(145deg, #0d9488 0%, #0f766e 45%, #115e59 100%);
             position: relative;
@@ -110,7 +118,7 @@
             background-clip: text;
         }
 
-        /* کارت‌های ویژگی با افکت شیشه‌ای */
+        /* کارت‌های ویژگی */
         .feature-card {
             background: rgba(255, 255, 255, 0.7);
             backdrop-filter: blur(8px);
@@ -203,6 +211,12 @@
             font-weight: 400;
             color: #94a3b8;
         }
+        .pricing-period {
+            display: block;
+            font-size: 14px;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
 
         .btn-pricing {
             padding: 12px;
@@ -272,6 +286,53 @@
 
         .footer-link { color: #cbd5e1; transition: 0.2s; }
         .footer-link:hover { color: white; }
+
+        /* Dropdown منو */
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            left: 0;
+            top: 100%;
+            min-width: 200px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+            border: 1px solid var(--gray-border);
+            padding: 8px;
+            z-index: 100;
+            margin-top: 8px;
+        }
+        .dropdown-trigger:hover .dropdown-menu {
+            display: block;
+        }
+        .dropdown-menu a {
+            display: block;
+            padding: 10px 16px;
+            border-radius: 12px;
+            color: #334155;
+            font-size: 14px;
+            transition: 0.2s;
+            text-align: right;
+        }
+        .dropdown-menu a:hover {
+            background: var(--gray-light);
+            color: var(--primary);
+        }
+        .dropdown-menu a i {
+            margin-left: 10px;
+        }
+        .dropdown-divider {
+            height: 1px;
+            background: var(--gray-border);
+            margin: 6px 8px;
+        }
+        .dropdown-menu .logout-item {
+            color: #ef4444;
+        }
+        .dropdown-menu .logout-item:hover {
+            background: #fef2f2;
+            color: #dc2626;
+        }
     </style>
 </head>
 <body>
@@ -293,11 +354,32 @@
                     <a href="#testimonials" class="nav-link text-sm">نظرات</a>
                 </div>
                 
-                <div class="flex items-center gap-3">
-                    <a href="/login/" class="text-sm text-slate-700 hover:text-emerald-600 transition px-3 py-1.5">ورود</a>
-                    <a href="/register/" class="btn-primary text-sm">
-                        شروع رایگان
-                    </a>
+                <div class="flex items-center gap-3" id="auth-section">
+                    {% if user.is_authenticated %}
+                        <div class="relative dropdown-trigger">
+                            <button class="flex items-center gap-2 text-sm text-slate-700 hover:text-emerald-600 transition px-3 py-1.5 rounded-full hover:bg-slate-50">
+                                <i class="bi bi-person-circle text-lg"></i>
+                                <span>{{ user.get_full_name|default:user.username }}</span>
+                                <i class="bi bi-chevron-down text-xs text-slate-400"></i>
+                            </button>
+                            <div class="dropdown-menu">
+                                <a href="/dashboard/"><i class="bi bi-grid-1x2"></i> داشبورد</a>
+                                <a href="/profile/"><i class="bi bi-person"></i> پروفایل</a>
+                                <a href="/farms/"><i class="bi bi-tree"></i> مزارع من</a>
+                                <a href="/samples/"><i class="bi bi-flask"></i> نمونه‌های خاک</a>
+                                {% if user.role == 'LAB' %}
+                                    <a href="/lab/dashboard/"><i class="bi bi-building"></i> پنل آزمایشگاه</a>
+                                {% elif user.role == 'EXPERT' %}
+                                    <a href="/expert/dashboard/"><i class="bi bi-person-badge"></i> پنل کارشناس</a>
+                                {% endif %}
+                                <div class="dropdown-divider"></div>
+                                <a href="/logout/" class="logout-item"><i class="bi bi-box-arrow-right"></i> خروج</a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <a href="/login/" class="text-sm text-slate-700 hover:text-emerald-600 transition px-3 py-1.5">ورود</a>
+                        <a href="/register/" class="btn-primary text-sm">شروع رایگان</a>
+                    {% endif %}
                 </div>
             </div>
         </div>
@@ -516,10 +598,15 @@
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+                <!-- پلن رایگان -->
                 <div class="pricing-card">
                     <div class="text-center mb-5">
                         <h3 class="text-xl font-bold text-slate-800">رایگان</h3>
-                        <div class="my-3"><span class="pricing-price">۰</span><span> تومان</span></div>
+                        <div class="my-3">
+                            <span class="pricing-price">۰</span>
+                            <span> تومان</span>
+                            <span class="pricing-period">همیشه رایگان</span>
+                        </div>
                         <p class="text-sm text-slate-500">مناسب برای شروع</p>
                     </div>
                     <ul class="space-y-2.5 text-sm mb-8">
@@ -532,11 +619,16 @@
                     <a href="/register/" class="btn-pricing btn-pricing-outline">شروع رایگان</a>
                 </div>
                 
+                <!-- پلن حرفه‌ای -->
                 <div class="pricing-card popular">
                     <div class="popular-badge">محبوب‌ترین</div>
                     <div class="text-center mb-5">
                         <h3 class="text-xl font-bold text-slate-800">حرفه‌ای</h3>
-                        <div class="my-3"><span class="pricing-price">۲۹۰,۰۰۰</span><span> تومان/ماه</span></div>
+                        <div class="my-3">
+                            <span class="pricing-price">۲۹۰,۰۰۰</span>
+                            <span> تومان</span>
+                            <span class="pricing-period">/ ماهانه</span>
+                        </div>
                         <p class="text-sm text-slate-500">مناسب برای کشاورزان حرفه‌ای</p>
                     </div>
                     <ul class="space-y-2.5 text-sm mb-8">
@@ -549,11 +641,16 @@
                     <a href="/subscription/" class="btn-pricing btn-pricing-primary">خرید اشتراک</a>
                 </div>
                 
+                <!-- پلن سازمانی -->
                 <div class="pricing-card">
                     <div class="text-center mb-5">
                         <h3 class="text-xl font-bold text-slate-800">سازمانی</h3>
-                        <div class="my-3"><span class="pricing-price">۵۹۰,۰۰۰</span><span> تومان/ماه</span></div>
-                        <p class="text-sm text-slate-500">مناسب برای شرکت‌ها</p>
+                        <div class="my-3">
+                            <span class="pricing-price">۵۹۰,۰۰۰</span>
+                            <span> تومان</span>
+                            <span class="pricing-period">/ ماهانه</span>
+                        </div>
+                        <p class="text-sm text-slate-500">مناسب برای شرکت‌ها و آزمایشگاه‌ها</p>
                     </div>
                     <ul class="space-y-2.5 text-sm mb-8">
                         <li class="flex items-center"><i class="bi bi-check text-emerald-500 ml-2"></i> تحلیل نامحدود</li>

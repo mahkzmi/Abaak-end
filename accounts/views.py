@@ -38,7 +38,7 @@ class RegisterView(APIView):
                 'national_id': openapi.Schema(type=openapi.TYPE_STRING, description='کد ملی'),
                 'role': openapi.Schema(
                     type=openapi.TYPE_STRING,
-                    enum=['ADMIN', 'EXPERT', 'LAB', 'FARMER', 'VIEWER'],
+                    enum=['EXPERT', 'LAB', 'FARMER', 'VIEWER'],
                     description='نقش کاربر (پیش‌فرض: FARMER)'
                 ),
             }

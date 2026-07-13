@@ -4,9 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>پنل تأیید نمونه‌ها - آباک</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- فونت و آیکون‌ها -->
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Leaflet برای نقشه -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
     <style>
         * {
             font-family: 'Vazirmatn', 'Tahoma', sans-serif;
@@ -20,7 +27,7 @@
             background: white;
         }
         .sample-card:hover {
-            border-color: #2e7d32;
+            border-color: #0d9488;
             box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
         .sample-card.warning {
@@ -29,6 +36,7 @@
         .sample-card.critical {
             border-right: 4px solid #ef4444;
         }
+        
         .badge {
             padding: 4px 12px;
             border-radius: 20px;
@@ -38,6 +46,7 @@
         .badge-pending { background: #fef3c7; color: #92400e; }
         .badge-verified { background: #d1fae5; color: #065f46; }
         .badge-rejected { background: #fee2e2; color: #991b1b; }
+        
         .btn-action {
             padding: 6px 16px;
             border-radius: 8px;
@@ -46,13 +55,17 @@
             transition: all 0.2s;
             border: none;
             cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
-        .btn-verify { background: #2e7d32; color: white; }
-        .btn-verify:hover { background: #1b5e20; }
+        .btn-verify { background: #0d9488; color: white; }
+        .btn-verify:hover { background: #0f766e; }
         .btn-reject { background: #dc2626; color: white; }
         .btn-reject:hover { background: #b91c1c; }
         .btn-view { background: #3b82f6; color: white; }
         .btn-view:hover { background: #2563eb; }
+        
         .modal-overlay {
             display: none;
             position: fixed;
@@ -61,7 +74,7 @@
             width: 100%;
             height: 100%;
             background: rgba(0,0,0,0.5);
-            z-index: 1000;
+            z-index: 10000;
             justify-content: center;
             align-items: center;
         }
@@ -70,197 +83,89 @@
             background: white;
             padding: 24px;
             border-radius: 12px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
+            max-width: 750px;
+            width: 95%;
+            max-height: 85vh;
             overflow-y: auto;
         }
+        
         .stat-card {
             background: white;
             padding: 16px;
             border-radius: 12px;
             text-align: center;
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #f3f4f6;
         }
         .stat-number {
             font-size: 28px;
             font-weight: 700;
         }
         
-        .nav-link {
-            transition: all 0.2s ease;
-            padding: 8px 16px;
+        .btn-primary {
+            background: #0d9488;
+            color: white;
+            padding: 8px 20px;
             border-radius: 8px;
-            color: #374151;
-            text-decoration: none;
+            transition: all 0.2s;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 6px;
         }
-        .nav-link:hover {
-            background: #f0fdf4;
-            color: #166534;
-        }
-        .nav-link.active {
-            background: #dcfce7;
-            color: #166534;
-            font-weight: 600;
+        .btn-primary:hover {
+            background: #0f766e;
         }
         
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: #2e7d32;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 14px;
+        /* انیمیشن نوار پیشرفت */
+        .progress-bar {
+            transition: width 1.5s ease-in-out;
         }
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 14px;
+        
+        /* استایل نقشه کوچک */
+        #mini-map {
+            height: 200px;
             border-radius: 8px;
-            transition: all 0.2s;
-            color: #374151;
-            text-decoration: none;
-            width: 100%;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
+            background: #e5e7eb;
         }
-        .dropdown-item:hover {
-            background: #f3f4f6;
-        }
-        .dropdown-item i {
-            width: 20px;
-        }
-        .sidebar-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: white;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            border-radius: 12px;
-            padding: 8px;
-            min-width: 200px;
-            z-index: 50;
-        }
-        .sidebar-menu.open {
-            display: block;
+        
+        /* اسکرول نرم */
+        .modal-box {
+            scroll-behavior: smooth;
         }
     </style>
 </head>
-<body class="bg-gray-50">
+<body>
+
+    <!-- ============================================================ -->
+    <!-- هدر یکپارچه با منطق نقش                                       -->
+    <!-- ============================================================ -->
+    {% include 'includes/header.html' %}
+
+    <!-- ============================================================ -->
+    <!-- محتوای اصلی                                                   -->
+    <!-- ============================================================ -->
     <div class="container mx-auto px-4 py-8">
-        
-        <!-- ==================== هدر یکپارچه ==================== -->
-        <nav class="bg-white rounded-xl shadow-lg p-4 mb-6">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <!-- لوگو -->
-                <a href="/" class="flex items-center gap-3 hover:opacity-80 transition">
-                    <i class="bi bi-tree-fill text-3xl text-green-700"></i>
-                    <div>
-                        <h1 class="text-2xl font-bold text-green-700">آباک</h1>
-                        <p class="text-xs text-gray-500">سامانه هوشمند تحلیل خاک</p>
-                    </div>
+
+        <!-- ===== هدر صفحه ===== -->
+        <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-green-700">✅ پنل تأیید نمونه‌ها</h1>
+                <p class="text-gray-600 text-sm">بررسی و تأیید نمونه‌های خاک ثبت‌شده توسط آزمایشگاه‌ها</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <button id="refresh-btn" class="btn-primary text-sm">
+                    <i class="bi bi-arrow-clockwise ml-1"></i> بروزرسانی
+                </button>
+                <a href="/dashboard/" class="btn-primary text-sm">
+                    <i class="bi bi-speedometer2 ml-1"></i> داشبورد
                 </a>
-
-                <!-- منوی اصلی (دسکتاپ) -->
-                <div class="hidden md:flex items-center gap-1 flex-wrap" id="main-menu">
-                    <a href="/map/" class="nav-link">
-                        <i class="bi bi-map"></i> نقشه
-                    </a>
-                    <a href="/dashboard/" class="nav-link">
-                        <i class="bi bi-speedometer2"></i> داشبورد
-                    </a>
-                    <a href="/farms/" class="nav-link">
-                        <i class="bi bi-tree"></i> مزارع
-                    </a>
-                    <a href="/health-chart/" class="nav-link">
-                        <i class="bi bi-graph-up"></i> روند سلامت
-                    </a>
-                    <a href="/expert-request/" class="nav-link">
-                        <i class="bi bi-person-badge"></i> درخواست کارشناس
-                    </a>
-                    <a href="/lab/" class="nav-link">
-                        <i class="bi bi-flask"></i> آزمایشگاه
-                    </a>
-                    <a href="/verify/" class="nav-link active">
-                        <i class="bi bi-check-circle"></i> تأیید
-                    </a>
-                </div>
-
-                <!-- بخش کاربر -->
-                <div class="flex items-center gap-3">
-                    <div class="relative">
-                        <button id="user-menu-btn" class="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-lg transition">
-                            <div class="user-avatar" id="user-avatar">ک</div>
-                            <i class="bi bi-chevron-down text-gray-400 text-sm"></i>
-                        </button>
-                        
-                        <div id="user-dropdown" class="sidebar-menu">
-                            <div class="px-4 py-3 border-b border-gray-100">
-                                <div class="font-bold text-gray-800" id="user-name">کاربر</div>
-                                <div class="text-xs text-gray-500" id="user-role">کشاورز</div>
-                            </div>
-                            <a href="/profile/" class="dropdown-item">
-                                <i class="bi bi-person"></i> پروفایل
-                            </a>
-                            <a href="/dashboard/" class="dropdown-item">
-                                <i class="bi bi-speedometer2"></i> داشبورد
-                            </a>
-                            <a href="/subscription/" class="dropdown-item">
-                                <i class="bi bi-credit-card"></i> اشتراک
-                            </a>
-                            <hr class="my-1">
-                            <button id="logout-btn" class="dropdown-item text-red-600 hover:bg-red-50">
-                                <i class="bi bi-box-arrow-left"></i> خروج
-                            </button>
-                        </div>
-                    </div>
-
-                    <button id="mobile-menu-btn" class="md:hidden text-gray-600 hover:text-gray-800 p-2">
-                        <i class="bi bi-list text-2xl"></i>
-                    </button>
-                </div>
             </div>
+        </div>
 
-            <!-- منوی موبایل -->
-            <div id="mobile-menu" class="md:hidden hidden mt-4 pt-4 border-t border-gray-100">
-                <div class="flex flex-col space-y-1" id="mobile-menu-items">
-                    <a href="/map/" class="nav-link block">
-                        <i class="bi bi-map ml-2"></i> نقشه
-                    </a>
-                    <a href="/dashboard/" class="nav-link block">
-                        <i class="bi bi-speedometer2 ml-2"></i> داشبورد
-                    </a>
-                    <a href="/farms/" class="nav-link block">
-                        <i class="bi bi-tree ml-2"></i> مزارع
-                    </a>
-                    <a href="/health-chart/" class="nav-link block">
-                        <i class="bi bi-graph-up ml-2"></i> روند سلامت
-                    </a>
-                    <a href="/expert-request/" class="nav-link block">
-                        <i class="bi bi-person-badge ml-2"></i> درخواست کارشناس
-                    </a>
-                    <a href="/lab/" class="nav-link block">
-                        <i class="bi bi-flask ml-2"></i> آزمایشگاه
-                    </a>
-                    <a href="/verify/" class="nav-link active block">
-                        <i class="bi bi-check-circle ml-2"></i> تأیید
-                    </a>
-                </div>
-            </div>
-        </nav>
-
-        <!-- ==================== آمار ==================== -->
+        <!-- ===== آمار ===== -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6" id="stats-container">
             <div class="stat-card">
                 <div class="text-sm text-gray-500">مجموع</div>
@@ -280,16 +185,16 @@
             </div>
         </div>
 
-        <!-- ==================== لیست نمونه‌ها ==================== -->
+        <!-- ===== لیست نمونه‌ها ===== -->
         <div id="samples-container">
-            <div class="text-center text-gray-500 py-12">در حال بارگذاری...</div>
+            <div class="text-center text-gray-500 py-12 bg-white rounded-lg border border-gray-100">در حال بارگذاری...</div>
         </div>
     </div>
 
     <!-- ==================== مودال تأیید ==================== -->
     <div id="verify-modal" class="modal-overlay">
         <div class="modal-box">
-            <h2 class="text-lg font-bold text-gray-800 mb-4">تأیید نمونه</h2>
+            <h2 class="text-lg font-bold text-gray-800 mb-4">✅ تأیید نمونه</h2>
             <p class="text-sm text-gray-600 mb-4">آیا از تأیید این نمونه اطمینان دارید؟</p>
             <div class="bg-gray-50 p-3 rounded-lg mb-4">
                 <div id="verify-sample-info" class="text-sm"></div>
@@ -308,9 +213,9 @@
     <!-- ==================== مودال رد ==================== -->
     <div id="reject-modal" class="modal-overlay">
         <div class="modal-box">
-            <h2 class="text-lg font-bold text-gray-800 mb-4">رد نمونه</h2>
+            <h2 class="text-lg font-bold text-gray-800 mb-4">❌ رد نمونه</h2>
             <p class="text-sm text-gray-600 mb-2">لطفاً دلیل رد را وارد کنید:</p>
-            <textarea id="reject-reason" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4" placeholder="مثلاً: pH نامعتبر، داده‌های ناقص، ..."></textarea>
+            <textarea id="reject-reason" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-4 focus:ring-2 focus:ring-red-500 focus:border-transparent" placeholder="مثلاً: pH نامعتبر، داده‌های ناقص، ..."></textarea>
             <div class="flex gap-3">
                 <button id="confirm-reject" class="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 transition">
                     <i class="bi bi-x-circle ml-1"></i> رد
@@ -322,14 +227,19 @@
         </div>
     </div>
 
-    <!-- ==================== مودال جزئیات ==================== -->
+    <!-- ==================== مودال جزئیات (نسخه پیشرفته) ==================== -->
     <div id="details-modal" class="modal-overlay">
-        <div class="modal-box">
-            <h2 class="text-lg font-bold text-gray-800 mb-4">📋 جزئیات نمونه</h2>
-            <div id="details-content" class="space-y-2 text-sm">
+        <div class="modal-box" style="max-width: 800px;">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-gray-800">📋 جزئیات نمونه</h2>
+                <span class="text-sm text-gray-400" id="detail-sample-code">---</span>
+            </div>
+            
+            <div id="details-content" class="space-y-4">
                 <div class="text-center text-gray-500">در حال بارگذاری...</div>
             </div>
-            <div class="mt-4 flex justify-end">
+            
+            <div class="mt-4 flex flex-wrap gap-2 justify-end border-t pt-4">
                 <button id="close-details" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-400 transition">
                     بستن
                 </button>
@@ -337,10 +247,14 @@
         </div>
     </div>
 
+    <!-- ============================================================ -->
+    <!-- JavaScript (نسخه کامل با بهبودها)                            -->
+    <!-- ============================================================ -->
     <script>
         // ============================================================
         // ۰. توابع کمکی
         // ============================================================
+        
         function getToken() {
             return localStorage.getItem('access_token');
         }
@@ -358,61 +272,13 @@
             };
         }
 
-        function getUserInfo() {
-            try {
-                const token = getToken();
-                if (!token) return null;
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                return {
-                    username: payload.username || 'کاربر',
-                    role: payload.role || 'کشاورز'
-                };
-            } catch {
-                return null;
-            }
-        }
-
         let currentSampleId = null;
+        let miniMapInstance = null;
 
         // ============================================================
-        // منوها
+        // ۱. بارگذاری آمار
         // ============================================================
-        document.getElementById('user-menu-btn').addEventListener('click', function(e) {
-            e.stopPropagation();
-            document.getElementById('user-dropdown').classList.toggle('open');
-        });
-
-        document.addEventListener('click', function() {
-            document.getElementById('user-dropdown').classList.remove('open');
-        });
-
-        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
-        });
-
-        function updateUserUI() {
-            const info = getUserInfo();
-            if (info) {
-                document.getElementById('user-name').textContent = info.username;
-                document.getElementById('user-role').textContent = info.role;
-                document.getElementById('user-avatar').textContent = info.username.charAt(0).toUpperCase();
-            }
-        }
-
-        // ============================================================
-        // خروج
-        // ============================================================
-        document.getElementById('logout-btn').addEventListener('click', function() {
-            if (confirm('آیا مطمئن هستید که می‌خواهید خارج شوید؟')) {
-                localStorage.removeItem('access_token');
-                localStorage.removeItem('refresh_token');
-                window.location.href = '/login/';
-            }
-        });
-
-        // ============================================================
-        // بارگذاری آمار
-        // ============================================================
+        
         async function loadStats() {
             try {
                 const token = getToken();
@@ -442,8 +308,9 @@
         }
 
         // ============================================================
-        // بارگذاری لیست نمونه‌ها
+        // ۲. بارگذاری لیست نمونه‌ها
         // ============================================================
+        
         async function loadSamples() {
             try {
                 const token = getToken();
@@ -464,10 +331,9 @@
                 const data = await response.json();
                 const container = document.getElementById('samples-container');
 
-                // ============ بررسی اینکه data آرایه است ============
                 if (!data || !Array.isArray(data)) {
                     container.innerHTML = `
-                        <div class="text-center text-gray-500 py-12 bg-white rounded-lg">
+                        <div class="text-center text-gray-500 py-12 bg-white rounded-lg border border-gray-100">
                             <i class="bi bi-inbox text-4xl"></i>
                             <p class="mt-2">هیچ نمونه‌ای در انتظار تأیید نیست</p>
                         </div>
@@ -478,7 +344,7 @@
 
                 if (data.length === 0) {
                     container.innerHTML = `
-                        <div class="text-center text-gray-500 py-12 bg-white rounded-lg">
+                        <div class="text-center text-gray-500 py-12 bg-white rounded-lg border border-gray-100">
                             <i class="bi bi-check-circle text-4xl text-green-500"></i>
                             <p class="mt-2">همه نمونه‌ها تأیید شده‌اند</p>
                         </div>
@@ -564,7 +430,7 @@
             } catch (error) {
                 console.error('Error loading samples:', error);
                 document.getElementById('samples-container').innerHTML = `
-                    <div class="text-center text-red-600 py-12 bg-white rounded-lg">
+                    <div class="text-center text-red-600 py-12 bg-white rounded-lg border border-gray-100">
                         <i class="bi bi-exclamation-triangle text-4xl"></i>
                         <p class="mt-2">خطا در بارگذاری: ${error.message}</p>
                     </div>
@@ -573,16 +439,18 @@
         }
 
         // ============================================================
-        // بارگذاری همه (آمار + لیست)
+        // ۳. بارگذاری همه (آمار + لیست)
         // ============================================================
+        
         async function loadAll() {
             await loadStats();
             await loadSamples();
         }
 
         // ============================================================
-        // مشاهده جزئیات
+        // ۴. مشاهده جزئیات (نسخه پیشرفته)
         // ============================================================
+        
         async function viewDetails(sampleId) {
             try {
                 const token = getToken();
@@ -601,58 +469,248 @@
                 }
 
                 const data = await response.json();
-                
                 const content = document.getElementById('details-content');
                 
-                let analysisHtml = '';
-                if (data.analysis) {
-                    analysisHtml = `
-                        <div class="mt-3 p-3 bg-green-50 rounded-lg">
-                            <div class="font-bold text-green-700">تحلیل خاک</div>
-                            <div>شاخص سلامت: ${data.analysis.soil_health_index}%</div>
-                            <div>سطح: ${data.analysis.soil_health_level}</div>
-                            <div>عملکرد پیش‌بینی: ${data.analysis.expected_yield} تن/هکتار</div>
-                            <div>سود پیش‌بینی: ${Number(data.analysis.expected_profit).toLocaleString()} تومان/هکتار</div>
-                            ${data.analysis.recommended_crops ? `
-                                <div class="mt-2">
-                                    <div class="font-medium">محصولات پیشنهادی:</div>
-                                    <ul class="pr-4">
-                                        ${data.analysis.recommended_crops.map(c => `<li>• ${c.name} (امتیاز: ${c.score}%)</li>`).join('')}
-                                    </ul>
-                                </div>
-                            ` : ''}
-                        </div>
-                    `;
-                }
+                document.getElementById('detail-sample-code').textContent = `کد: ${data.sample_code}`;
                 
+                // ===== ۱. محاسبه امتیازات =====
+                const healthIndex = data.analysis?.soil_health_index || 0;
+                const healthLevel = data.analysis?.soil_health_level || 'نامشخص';
+                
+                // ===== ۲. وضعیت عناصر =====
+                const elements = [
+                    { name: 'pH', value: data.ph, optimal: '6.5 - 7.5', unit: '' },
+                    { name: 'EC', value: data.ec, optimal: '0.5 - 2.0', unit: 'dS/m' },
+                    { name: 'ماده آلی', value: data.organic_matter, optimal: '2.0 - 4.0', unit: '%' },
+                    { name: 'نیتروژن', value: data.nitrogen || 0, optimal: '40 - 80', unit: 'ppm' },
+                    { name: 'فسفر', value: data.phosphorus || 0, optimal: '15 - 30', unit: 'ppm' },
+                    { name: 'پتاسیم', value: data.potassium || 0, optimal: '150 - 300', unit: 'ppm' },
+                    { name: 'آهن', value: data.iron || 0, optimal: '4.5 - 10', unit: 'ppm' },
+                    { name: 'روی', value: data.zinc || 0, optimal: '0.8 - 2.0', unit: 'ppm' },
+                ];
+
+                // ===== ۳. رنگ‌بندی سلامت =====
+                let healthColor = '#ef4444';
+                let healthText = 'ضعیف';
+                let healthBg = '#fef2f2';
+                if (healthIndex >= 80) { healthColor = '#22c55e'; healthText = 'عالی'; healthBg = '#f0fdf4'; }
+                else if (healthIndex >= 60) { healthColor = '#3b82f6'; healthText = 'خوب'; healthBg = '#eff6ff'; }
+                else if (healthIndex >= 40) { healthColor = '#f59e0b'; healthText = 'متوسط'; healthBg = '#fffbeb'; }
+
+                // ===== ۴. تولید خلاصه هوشمند =====
+                let summary = '';
+                if (data.analysis?.management_tips) {
+                    summary = data.analysis.management_tips;
+                } else {
+                    const issues = [];
+                    if (data.ph < 6.0) issues.push('خاک اسیدی است');
+                    if (data.ph > 7.5) issues.push('خاک قلیایی است');
+                    if (data.ec > 2.0) issues.push('شوری خاک بالاست');
+                    if (data.organic_matter < 1.5) issues.push('ماده آلی کم است');
+                    if (data.nitrogen < 30) issues.push('نیتروژن کم است');
+                    if (data.phosphorus < 10) issues.push('فسفر کم است');
+                    if (data.potassium < 150) issues.push('پتاسیم کم است');
+                    
+                    if (issues.length === 0) {
+                        summary = '✅ وضعیت خاک مطلوب است. تمام پارامترها در محدوده بهینه قرار دارند.';
+                    } else {
+                        summary = `⚠️ ${issues.join('، ')}. توصیه می‌شود اصلاحات لازم انجام شود.`;
+                    }
+                }
+
+                // ===== ۵. ساخت HTML =====
                 content.innerHTML = `
-                    <div class="grid grid-cols-2 gap-2">
+                    <!-- ===== وضعیت کلی ===== -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <div class="flex items-center gap-4">
+                            <div class="flex-1">
+                                <div class="text-sm text-gray-500">شاخص سلامت خاک (DSHI)</div>
+                                <div class="flex items-center gap-3">
+                                    <div class="text-3xl font-bold" style="color: ${healthColor}">${healthIndex}%</div>
+                                    <span class="px-3 py-1 rounded-full text-sm font-bold" style="background: ${healthBg}; color: ${healthColor}">${healthText}</span>
+                                </div>
+                            </div>
+                            <div class="flex-1">
+                                <div class="w-full bg-gray-200 rounded-full h-3">
+                                    <div class="h-3 rounded-full progress-bar" style="width: 0%; background: ${healthColor}" id="health-progress"></div>
+                                </div>
+                                <div class="flex justify-between text-xs text-gray-400 mt-1">
+                                    <span>ضعیف</span>
+                                    <span>متوسط</span>
+                                    <span>خوب</span>
+                                    <span>عالی</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- ===== خلاصه هوشمند ===== -->
+                    <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg text-sm text-gray-700">
+                        <div class="font-medium text-blue-700 mb-1">🧠 خلاصه تحلیل</div>
+                        <p>${summary}</p>
+                        ${data.analysis?.recommended_crops?.length > 0 ? `
+                            <div class="mt-2">
+                                <span class="font-medium">محصولات پیشنهادی:</span>
+                                ${data.analysis.recommended_crops.slice(0, 3).map(c => 
+                                    `<span class="inline-block bg-green-100 text-green-700 px-2 py-0.5 rounded-full text-xs ml-1">${c.name} (${c.score}%)</span>`
+                                ).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <!-- ===== جدول عناصر ===== -->
+                    <div>
+                        <div class="font-medium text-gray-700 mb-2">🧪 وضعیت عناصر خاک</div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            ${elements.map(el => {
+                                let statusColor = 'text-gray-500';
+                                let statusBg = 'bg-gray-50';
+                                let statusText = '';
+                                if (el.value > 0) {
+                                    const optimalMin = parseFloat(el.optimal.split(' - ')[0]);
+                                    const optimalMax = parseFloat(el.optimal.split(' - ')[1]);
+                                    if (el.value >= optimalMin && el.value <= optimalMax) {
+                                        statusColor = 'text-green-600';
+                                        statusBg = 'bg-green-50';
+                                        statusText = '✓ مطلوب';
+                                    } else if (el.value < optimalMin) {
+                                        statusColor = 'text-yellow-600';
+                                        statusBg = 'bg-yellow-50';
+                                        statusText = '⬇ کمبود';
+                                    } else {
+                                        statusColor = 'text-orange-600';
+                                        statusBg = 'bg-orange-50';
+                                        statusText = '⬆ بیش‌بود';
+                                    }
+                                }
+                                return `
+                                    <div class="${statusBg} p-2 rounded-lg text-center border border-gray-100">
+                                        <div class="text-xs text-gray-500">${el.name}</div>
+                                        <div class="font-bold ${statusColor}">${el.value} ${el.unit}</div>
+                                        <div class="text-xs ${statusColor}">${statusText}</div>
+                                        <div class="text-xs text-gray-400">مطلوب: ${el.optimal}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                    
+                    <!-- ===== نقشه (اگر مختصات داشته باشد) ===== -->
+                    ${data.latitude && data.longitude ? `
+                        <div>
+                            <div class="font-medium text-gray-700 mb-2">📍 موقعیت مزرعه</div>
+                            <div id="mini-map"></div>
+                            <div class="text-xs text-gray-400 mt-1">
+                                <span>عرض: ${data.latitude}</span> | 
+                                <span>طول: ${data.longitude}</span>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    <!-- ===== اطلاعات تکمیلی ===== -->
+                    <div class="grid grid-cols-2 gap-2 text-sm border-t pt-3">
                         <div><span class="text-gray-500">کد نمونه:</span> <strong>${data.sample_code}</strong></div>
                         <div><span class="text-gray-500">مزرعه:</span> <strong>${data.farm_name || 'نامشخص'}</strong></div>
                         <div><span class="text-gray-500">تاریخ نمونه‌برداری:</span> <strong>${data.sampling_date}</strong></div>
                         <div><span class="text-gray-500">عمق:</span> <strong>${data.depth} سانتی‌متر</strong></div>
-                        <div><span class="text-gray-500">pH:</span> <strong>${data.ph}</strong></div>
-                        <div><span class="text-gray-500">EC:</span> <strong>${data.ec} dS/m</strong></div>
-                        <div><span class="text-gray-500">ماده آلی:</span> <strong>${data.organic_matter}%</strong></div>
-                        <div><span class="text-gray-500">بافت:</span> <strong>${data.texture_display || data.texture}</strong></div>
-                        ${data.nitrogen ? `<div><span class="text-gray-500">نیتروژن:</span> <strong>${data.nitrogen} ppm</strong></div>` : ''}
-                        ${data.phosphorus ? `<div><span class="text-gray-500">فسفر:</span> <strong>${data.phosphorus} ppm</strong></div>` : ''}
-                        ${data.potassium ? `<div><span class="text-gray-500">پتاسیم:</span> <strong>${data.potassium} ppm</strong></div>` : ''}
-                        <div class="col-span-2"><span class="text-gray-500">آزمایشگاه:</span> <strong>${data.laboratory_name || 'نامشخص'}</strong></div>
-                        <div class="col-span-2"><span class="text-gray-500">منبع:</span> <strong>${data.source}</strong></div>
-                        ${data.is_verified ? `<div class="col-span-2"><span class="text-green-600">✓ تأیید شده</span></div>` : ''}
-                        ${data.rejection_reason ? `<div class="col-span-2"><span class="text-red-600">✗ رد شده: ${data.rejection_reason}</span></div>` : ''}
+                        <div><span class="text-gray-500">آزمایشگاه:</span> <strong>${data.laboratory_name || 'نامشخص'}</strong></div>
+                        <div><span class="text-gray-500">وضعیت:</span> 
+                            ${data.is_verified ? '<span class="text-green-600">✓ تأیید شده</span>' : 
+                              data.rejection_reason ? '<span class="text-red-600">✗ رد شده</span>' : 
+                              '<span class="text-yellow-600">⏳ در انتظار</span>'}
+                        </div>
+                        ${data.source ? `<div><span class="text-gray-500">منبع:</span> <strong>${data.source}</strong></div>` : ''}
                     </div>
-                    ${analysisHtml}
+                    
+                    <!-- ===== هشدارها ===== -->
+                    ${data.validation_warnings?.length > 0 ? `
+                        <div class="bg-yellow-50 border border-yellow-200 p-3 rounded-lg">
+                            <div class="font-medium text-yellow-700 mb-1">⚠️ هشدارها</div>
+                            <ul class="text-sm text-gray-600 pr-4 list-disc">
+                                ${data.validation_warnings.map(w => `<li>${w}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
                 `;
-                
+
+                // ===== انیمیشن نوار پیشرفت =====
+                setTimeout(() => {
+                    const progress = document.getElementById('health-progress');
+                    if (progress) {
+                        progress.style.width = `${healthIndex}%`;
+                    }
+                }, 100);
+
+                // ===== بارگذاری نقشه =====
+                if (data.latitude && data.longitude) {
+                    setTimeout(() => {
+                        loadMiniMap(data.latitude, data.longitude);
+                    }, 200);
+                }
+
                 document.getElementById('details-modal').classList.add('active');
-                
+
             } catch (error) {
                 alert('خطا در دریافت جزئیات: ' + error.message);
             }
         }
 
+        // ============================================================
+        // ۵. بارگذاری نقشه کوچک
+        // ============================================================
+        
+        function loadMiniMap(lat, lng) {
+            const mapContainer = document.getElementById('mini-map');
+            if (!mapContainer) return;
+            
+            // پاک کردن محتوای قبلی
+            mapContainer.innerHTML = '';
+            
+            // اگر Leaflet بارگذاری شده باشد
+            if (typeof L !== 'undefined') {
+                try {
+                    // اگر نقشه قبلی وجود دارد، آن را حذف کن
+                    if (miniMapInstance) {
+                        miniMapInstance.remove();
+                        miniMapInstance = null;
+                    }
+                    
+                    miniMapInstance = L.map(mapContainer).setView([lat, lng], 14);
+                    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                        attribution: '&copy; OpenStreetMap contributors'
+                    }).addTo(miniMapInstance);
+                    
+                    L.marker([lat, lng]).addTo(miniMapInstance)
+                        .bindPopup('📍 موقعیت نمونه')
+                        .openPopup();
+                    
+                    // ریسایز کردن نقشه بعد از نمایش
+                    setTimeout(() => {
+                        if (miniMapInstance) {
+                            miniMapInstance.invalidateSize();
+                        }
+                    }, 300);
+                } catch (e) {
+                    console.warn('Error loading map:', e);
+                    mapContainer.innerHTML = `
+                        <div class="flex items-center justify-center text-gray-400 text-sm h-full">
+                            <i class="bi bi-map ml-2"></i> نقشه در دسترس نیست
+                        </div>
+                    `;
+                }
+            } else {
+                mapContainer.innerHTML = `
+                    <div class="flex items-center justify-center text-gray-400 text-sm h-full">
+                        <i class="bi bi-map ml-2"></i> نقشه در دسترس نیست
+                    </div>
+                `;
+            }
+        }
+
+        // ============================================================
+        // ۶. توابع باز کردن مودال‌ها
+        // ============================================================
+        
         function openVerifyModal(sampleId, sampleCode) {
             currentSampleId = sampleId;
             document.getElementById('verify-sample-info').innerHTML = `
@@ -670,8 +728,9 @@
         }
 
         // ============================================================
-        // تأیید
+        // ۷. تأیید
         // ============================================================
+        
         document.getElementById('confirm-verify').addEventListener('click', async function() {
             if (!currentSampleId) return;
             
@@ -707,8 +766,9 @@
         });
 
         // ============================================================
-        // رد
+        // ۸. رد
         // ============================================================
+        
         document.getElementById('confirm-reject').addEventListener('click', async function() {
             if (!currentSampleId) return;
             
@@ -750,8 +810,9 @@
         });
 
         // ============================================================
-        // بستن مودال‌ها
+        // ۹. بستن مودال‌ها
         // ============================================================
+        
         document.getElementById('cancel-verify').addEventListener('click', function() {
             document.getElementById('verify-modal').classList.remove('active');
         });
@@ -760,11 +821,17 @@
         });
         document.getElementById('close-details').addEventListener('click', function() {
             document.getElementById('details-modal').classList.remove('active');
+            // پاک کردن نقشه
+            if (miniMapInstance) {
+                miniMapInstance.remove();
+                miniMapInstance = null;
+            }
         });
 
         // ============================================================
-        // بروزرسانی
+        // ۱۰. بروزرسانی
         // ============================================================
+        
         document.getElementById('refresh-btn').addEventListener('click', function() {
             this.disabled = true;
             this.innerHTML = '<i class="bi bi-arrow-clockwise ml-1 animate-spin"></i> در حال بروزرسانی...';
@@ -775,15 +842,15 @@
         });
 
         // ============================================================
-        // بارگذاری اولیه
+        // ۱۱. بارگذاری اولیه
         // ============================================================
+        
         (function init() {
             const token = getToken();
             if (!token) {
                 redirectToLogin();
                 return;
             }
-            updateUserUI();
             loadAll();
         })();
     </script>

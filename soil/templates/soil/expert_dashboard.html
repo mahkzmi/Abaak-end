@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>پنل کارشناس - آباک</title>
+    
+    <!-- فونت و آیکون‌ها -->
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        * {
+            font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+        }
+        
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border: 1px solid #f3f4f6;
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        .stat-label {
+            font-size: 13px;
+            color: #6b7280;
+        }
+        .stat-icon {
+            font-size: 28px;
+            opacity: 0.6;
+        }
+        
+        .request-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s;
+            background: white;
+        }
+        .request-card:hover {
+            border-color: #0d9488;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-pending { background: #fef3c7; color: #92400e; }
+        .status-accepted { background: #dbeafe; color: #1e40af; }
+        .status-in_progress { background: #d1fae5; color: #065f46; }
+        .status-completed { background: #d1fae5; color: #065f46; }
+        .status-rejected { background: #fee2e2; color: #991b1b; }
+        
+        .btn-action {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .btn-accept { background: #0d9488; color: white; }
+        .btn-accept:hover { background: #0f766e; }
+        .btn-reject { background: #dc2626; color: white; }
+        .btn-reject:hover { background: #b91c1c; }
+        .btn-complete { background: #2563eb; color: white; }
+        .btn-complete:hover { background: #1d4ed8; }
+        .btn-view { background: #6b7280; color: white; }
+        .btn-view:hover { background: #4b5563; }
+        
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+        
+        .btn-primary {
+            background: #0d9488;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        .btn-primary:hover {
+            background: #0f766e;
+        }
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
+        .btn-success {
+            background: #22c55e;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        .btn-success:hover {
+            background: #16a34a;
+        }
+        
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-overlay.active { display: flex; }
+        .modal-box {
+            background: white;
+            padding: 24px;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .tab-btn {
+            padding: 8px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            background: transparent;
+            color: #6b7280;
+        }
+        .tab-btn.active {
+            background: #0d9488;
+            color: white;
+        }
+        .tab-btn:hover:not(.active) {
+            background: #f3f4f6;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        
+        .btn-verify-nav {
+            background: #8b5cf6;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        .btn-verify-nav:hover {
+            background: #7c3aed;
+        }
+        
+        /* کارت اطلاعات نمونه‌ها */
+        .sample-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        .sample-stat-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+        .sample-stat-number {
+            font-size: 24px;
+            font-weight: 700;
+        }
+        .sample-stat-label {
+            font-size: 12px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ============================================================ -->
+    <!-- هدر یکپارچه با منطق نقش                                       -->
+    <!-- ============================================================ -->
+    {% include 'includes/header.html' %}
+
+    <!-- ============================================================ -->
+    <!-- محتوای اصلی                                                   -->
+    <!-- ============================================================ -->
+    <div class="container mx-auto px-4 py-8">
+
+        <!-- ===== هدر صفحه ===== -->
+        <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+            <div>
+                <h1 class="text-2xl font-bold text-green-700">👨‍🔬 پنل کارشناس</h1>
+                <p class="text-gray-600 text-sm">مدیریت درخواست‌ها و بررسی تحلیل‌ها</p>
+            </div>
+            <div class="flex flex-wrap gap-2">
+                <a href="/verify/" class="btn-verify-nav text-sm">
+                    <i class="bi bi-check-circle ml-1"></i> رفتن به پنل نمونه ها
+                </a>
+                <button id="refresh-btn" class="btn-primary text-sm">
+                    <i class="bi bi-arrow-clockwise ml-1"></i> بروزرسانی
+                </button>
+                <a href="/dashboard/" class="btn-secondary text-sm">
+                    <i class="bi bi-arrow-right ml-1"></i> بازگشت
+                </a>
+            </div>
+        </div>
+
+        <!-- ===== آمار ===== -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="stats-container">
+            <div class="stat-card">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="stat-label">درخواست‌های جدید</div>
+                        <div class="stat-number text-yellow-600" id="stat-pending">0</div>
+                    </div>
+                    <div class="stat-icon text-yellow-600"><i class="bi bi-clock-history"></i></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="stat-label">در حال انجام</div>
+                        <div class="stat-number text-blue-600" id="stat-in-progress">0</div>
+                    </div>
+                    <div class="stat-icon text-blue-600"><i class="bi bi-hourglass-split"></i></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="stat-label">تکمیل شده</div>
+                        <div class="stat-number text-green-600" id="stat-completed">0</div>
+                    </div>
+                    <div class="stat-icon text-green-600"><i class="bi bi-check-circle"></i></div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <div class="stat-label">نمونه‌های تأیید</div>
+                        <div class="stat-number text-emerald-600" id="stat-verified">0</div>
+                    </div>
+                    <div class="stat-icon text-emerald-600"><i class="bi bi-flask"></i></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== تب‌ها ===== -->
+        <div class="bg-white rounded-lg shadow-lg border border-gray-100 p-4 mb-6">
+            <div class="flex flex-wrap gap-2 border-b border-gray-200 pb-3">
+                <button class="tab-btn active" data-tab="requests">
+                    <i class="bi bi-envelope ml-1"></i> درخواست‌ها
+                </button>
+                <button class="tab-btn" data-tab="analytics">
+                    <i class="bi bi-graph-up ml-1"></i> تحلیل‌ها
+                </button>
+            </div>
+
+            <!-- ===== تب درخواست‌ها ===== -->
+            <div id="tab-requests" class="tab-content active pt-4">
+                <div id="requests-list">
+                    <div class="text-center text-gray-500 py-8">در حال بارگذاری...</div>
+                </div>
+            </div>
+
+            <!-- ===== تب تحلیل‌ها ===== -->
+            <div id="tab-analytics" class="tab-content pt-4">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- نمودار وضعیت درخواست‌ها -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-bold text-gray-700 mb-2">📊 وضعیت درخواست‌ها</h4>
+                        <div class="chart-container">
+                            <canvas id="requestsChart"></canvas>
+                        </div>
+                    </div>
+                    <!-- نمودار عملکرد کارشناس -->
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-bold text-gray-700 mb-2">📊 عملکرد کارشناس</h4>
+                        <div class="chart-container">
+                            <canvas id="performanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ===== بخش جدید: آمار نمونه‌های تأیید ===== -->
+                <div class="mt-6">
+                    <div class="bg-gray-50 p-4 rounded-lg">
+                        <h4 class="font-bold text-gray-700 mb-4">📊 آمار نمونه‌های تأیید</h4>
+                        
+                        <!-- آمار سریع -->
+                        <div class="sample-stats-grid mb-4">
+                            <div class="sample-stat-item">
+                                <div class="sample-stat-number text-yellow-600" id="sample-pending">0</div>
+                                <div class="sample-stat-label">در انتظار تأیید</div>
+                            </div>
+                            <div class="sample-stat-item">
+                                <div class="sample-stat-number text-green-600" id="sample-verified">0</div>
+                                <div class="sample-stat-label">تأیید شده</div>
+                            </div>
+                            <div class="sample-stat-item">
+                                <div class="sample-stat-number text-red-600" id="sample-rejected">0</div>
+                                <div class="sample-stat-label">رد شده</div>
+                            </div>
+                        </div>
+                        
+                        <!-- نمودار نمونه‌ها -->
+                        <div class="chart-container" style="height: 220px;">
+                            <canvas id="samplesChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-blue-50 p-4 rounded-lg text-center border border-blue-200">
+                        <div class="text-sm text-blue-600">میانگین زمان پاسخ</div>
+                        <div class="text-2xl font-bold text-blue-700" id="avg-response-time">--</div>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg text-center border border-green-200">
+                        <div class="text-sm text-green-600">نرخ پذیرش</div>
+                        <div class="text-2xl font-bold text-green-700" id="acceptance-rate">--</div>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded-lg text-center border border-purple-200">
+                        <div class="text-sm text-purple-600">درخواست‌های فعال</div>
+                        <div class="text-2xl font-bold text-purple-700" id="active-requests">--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== مودال پاسخ ==================== -->
+    <div id="response-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h2 class="text-xl font-bold text-gray-800 mb-4">💬 پاسخ به درخواست</h2>
+            <p class="text-sm text-gray-600 mb-2">درخواست: <span id="modal-request-title" class="font-bold">---</span></p>
+            <input type="hidden" id="modal-request-id">
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">پاسخ شما</label>
+                <textarea id="modal-response-text" rows="4" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="پاسخ خود را وارد کنید..."></textarea>
+            </div>
+            <div class="flex gap-3">
+                <button id="modal-submit-response" class="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 transition">
+                    <i class="bi bi-send ml-1"></i> ارسال
+                </button>
+                <button id="modal-close-response" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition">
+                    انصراف
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- JavaScript                                                   -->
+    <!-- ============================================================ -->
+    <script>
+        const API_BASE = '/api';
+
+        // ============================================================
+        // ۰. توابع کمکی
+        // ============================================================
+        
+        function getToken() {
+            return localStorage.getItem('access_token');
+        }
+
+        function getHeaders() {
+            return {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getToken()}`
+            };
+        }
+
+        function redirectToLogin() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            window.location.href = '/login/';
+        }
+
+        let requestsChartInstance = null;
+        let performanceChartInstance = null;
+        let samplesChartInstance = null;
+
+        // ============================================================
+        // ۱. بارگذاری آمار
+        // ============================================================
+        
+        async function loadStats() {
+            try {
+                const token = getToken();
+                if (!token) { redirectToLogin(); return; }
+
+                // دریافت آمار درخواست‌ها
+                const [pendingRes, inProgressRes, completedRes, verifyRes] = await Promise.all([
+                    fetch(`${API_BASE}/analyses/expert-requests/?status=PENDING`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }),
+                    fetch(`${API_BASE}/analyses/expert-requests/?status=ACCEPTED`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }),
+                    fetch(`${API_BASE}/analyses/expert-requests/?status=COMPLETED`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }),
+                    fetch(`${API_BASE}/analyses/verification-stats/`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                ]);
+
+                if (pendingRes.ok) {
+                    const data = await pendingRes.json();
+                    const pending = Array.isArray(data) ? data.filter(r => r.status === 'PENDING').length : 0;
+                    document.getElementById('stat-pending').textContent = pending || 0;
+                }
+
+                if (inProgressRes.ok) {
+                    const data = await inProgressRes.json();
+                    const inProgress = Array.isArray(data) ? data.filter(r => r.status === 'ACCEPTED').length : 0;
+                    document.getElementById('stat-in-progress').textContent = inProgress || 0;
+                }
+
+                if (completedRes.ok) {
+                    const data = await completedRes.json();
+                    const completed = Array.isArray(data) ? data.filter(r => r.status === 'COMPLETED').length : 0;
+                    document.getElementById('stat-completed').textContent = completed || 0;
+                }
+
+                if (verifyRes.ok) {
+                    const data = await verifyRes.json();
+                    document.getElementById('stat-verified').textContent = data.verified || 0;
+                    
+                    // به‌روزرسانی آمار نمونه‌ها
+                    document.getElementById('sample-pending').textContent = data.pending || 0;
+                    document.getElementById('sample-verified').textContent = data.verified || 0;
+                    document.getElementById('sample-rejected').textContent = data.rejected || 0;
+                }
+
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // ============================================================
+        // ۲. بارگذاری درخواست‌ها
+        // ============================================================
+        
+        async function loadRequests() {
+            try {
+                const token = getToken();
+                if (!token) { redirectToLogin(); return; }
+
+                const response = await fetch(`${API_BASE}/analyses/expert-requests/`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.status === 401) { redirectToLogin(); return; }
+                if (!response.ok) throw new Error('خطا در دریافت درخواست‌ها');
+
+                const data = await response.json();
+                const requests = Array.isArray(data) ? data : [];
+                const container = document.getElementById('requests-list');
+
+                if (requests.length === 0) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-8">
+                            <i class="bi bi-inbox text-3xl"></i>
+                            <p class="mt-2">هیچ درخواستی وجود ندارد</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // مرتب‌سازی: ابتدا در انتظار، سپس بقیه
+                const sorted = [...requests].sort((a, b) => {
+                    const order = { 'PENDING': 0, 'ACCEPTED': 1, 'IN_PROGRESS': 2, 'COMPLETED': 3, 'REJECTED': 4 };
+                    return (order[a.status] || 5) - (order[b.status] || 5);
+                });
+
+                container.innerHTML = sorted.map(req => {
+                    const statusMap = {
+                        'PENDING': 'status-pending',
+                        'ACCEPTED': 'status-accepted',
+                        'IN_PROGRESS': 'status-in_progress',
+                        'COMPLETED': 'status-completed',
+                        'REJECTED': 'status-rejected'
+                    };
+                    const statusClass = statusMap[req.status] || 'status-pending';
+                    
+                    let actions = '';
+                    if (req.status === 'PENDING') {
+                        actions = `
+                            <button class="btn-action btn-accept" onclick="acceptRequest(${req.id})">
+                                <i class="bi bi-check-circle"></i> پذیرش
+                            </button>
+                            <button class="btn-action btn-reject" onclick="rejectRequest(${req.id})">
+                                <i class="bi bi-x-circle"></i> رد
+                            </button>
+                        `;
+                    } else if (req.status === 'ACCEPTED') {
+                        actions = `
+                            <button class="btn-action btn-complete" onclick="completeRequest(${req.id})">
+                                <i class="bi bi-check-circle"></i> تکمیل
+                            </button>
+                        `;
+                    }
+                    
+                    return `
+                        <div class="request-card mb-3">
+                            <div class="flex justify-between items-start flex-wrap gap-2">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <span class="font-bold text-gray-800">${req.title}</span>
+                                        <span class="status-badge ${statusClass}">${req.status_display || req.status}</span>
+                                    </div>
+                                    <div class="text-sm text-gray-600">${req.farm_name || 'مزرعه نامشخص'} | ${req.farmer_name || 'کشاورز'}</div>
+                                    <div class="text-sm text-gray-600 mt-1">${req.description}</div>
+                                    ${req.expert_response ? `<div class="text-sm text-blue-600 mt-1">💬 ${req.expert_response}</div>` : ''}
+                                    <div class="text-xs text-gray-400 mt-1">${new Date(req.created_at).toLocaleDateString('fa-IR')}</div>
+                                </div>
+                                <div class="flex flex-wrap gap-1">
+                                    ${actions}
+                                    <button class="btn-action btn-view" onclick="viewRequestDetail(${req.id})">
+                                        <i class="bi bi-eye"></i> مشاهده
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                document.getElementById('requests-list').innerHTML = `
+                    <div class="text-center text-red-600 py-8">خطا در بارگذاری: ${error.message}</div>
+                `;
+            }
+        }
+
+        // ============================================================
+        // ۳. اقدامات روی درخواست‌ها
+        // ============================================================
+        
+        async function acceptRequest(requestId) {
+            if (!confirm('آیا از پذیرش این درخواست اطمینان دارید؟')) return;
+            
+            try {
+                const token = getToken();
+                const response = await fetch(`${API_BASE}/analyses/${requestId}/accept-request/`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ response: 'درخواست پذیرفته شد' })
+                });
+                
+                if (response.status === 401) { redirectToLogin(); return; }
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ ' + result.message);
+                    refreshAll();
+                } else {
+                    alert('❌ ' + (result.error || 'خطا در پذیرش'));
+                }
+            } catch (error) {
+                alert('❌ خطا: ' + error.message);
+            }
+        }
+
+        async function rejectRequest(requestId) {
+            const reason = prompt('لطفاً دلیل رد را وارد کنید:');
+            if (reason === null) return;
+            if (!reason.trim()) {
+                alert('لطفاً دلیل رد را وارد کنید');
+                return;
+            }
+            
+            try {
+                const token = getToken();
+                const response = await fetch(`${API_BASE}/analyses/${requestId}/reject-request/`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ reason: reason })
+                });
+                
+                if (response.status === 401) { redirectToLogin(); return; }
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ ' + result.message);
+                    refreshAll();
+                } else {
+                    alert('❌ ' + (result.error || 'خطا در رد'));
+                }
+            } catch (error) {
+                alert('❌ خطا: ' + error.message);
+            }
+        }
+
+        async function completeRequest(requestId) {
+            if (!confirm('آیا از تکمیل این درخواست اطمینان دارید؟')) return;
+            
+            try {
+                const token = getToken();
+                const response = await fetch(`${API_BASE}/analyses/${requestId}/complete-request/`, {
+                    method: 'POST',
+                    headers: getHeaders(),
+                    body: JSON.stringify({ note: 'درخواست تکمیل شد' })
+                });
+                
+                if (response.status === 401) { redirectToLogin(); return; }
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('✅ ' + result.message);
+                    refreshAll();
+                } else {
+                    alert('❌ ' + (result.error || 'خطا در تکمیل'));
+                }
+            } catch (error) {
+                alert('❌ خطا: ' + error.message);
+            }
+        }
+
+        // ============================================================
+        // ۴. مشاهده جزئیات
+        // ============================================================
+        
+        function viewRequestDetail(requestId) {
+            window.location.href = `/expert/request/${requestId}/`;
+        }
+
+        // ============================================================
+        // ۵. بارگذاری تحلیل‌ها (نمودارها)
+        // ============================================================
+        
+        async function loadAnalytics() {
+            try {
+                const token = getToken();
+                if (!token) { redirectToLogin(); return; }
+
+                // دریافت تمام درخواست‌ها
+                const [requestsRes, verifyRes] = await Promise.all([
+                    fetch(`${API_BASE}/analyses/expert-requests/`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    }),
+                    fetch(`${API_BASE}/analyses/verification-stats/`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    })
+                ]);
+
+                if (!requestsRes.ok) throw new Error('خطا در دریافت درخواست‌ها');
+
+                const requestsData = await requestsRes.json();
+                const requests = Array.isArray(requestsData) ? requestsData : [];
+
+                // آمار درخواست‌ها
+                const pending = requests.filter(r => r.status === 'PENDING').length;
+                const accepted = requests.filter(r => r.status === 'ACCEPTED').length;
+                const inProgress = requests.filter(r => r.status === 'IN_PROGRESS').length;
+                const completed = requests.filter(r => r.status === 'COMPLETED').length;
+                const rejected = requests.filter(r => r.status === 'REJECTED').length;
+
+                // آمار نمونه‌ها
+                let verifyStats = { pending: 0, verified: 0, rejected: 0 };
+                if (verifyRes.ok) {
+                    verifyStats = await verifyRes.json();
+                }
+
+                // میانگین زمان پاسخ
+                const total = pending + accepted + inProgress + completed + rejected;
+                document.getElementById('acceptance-rate').textContent = total > 0 ? `${Math.round((accepted + completed) / total * 100)}%` : '--';
+                document.getElementById('active-requests').textContent = pending + accepted + inProgress;
+                document.getElementById('avg-response-time').textContent = '۲۴ ساعت';
+
+                // ===== نمودار وضعیت درخواست‌ها =====
+                const ctx1 = document.getElementById('requestsChart').getContext('2d');
+                if (requestsChartInstance) requestsChartInstance.destroy();
+                
+                requestsChartInstance = new Chart(ctx1, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['در انتظار', 'پذیرفته شده', 'در حال انجام', 'تکمیل شده', 'رد شده'],
+                        datasets: [{
+                            data: [pending, accepted, inProgress, completed, rejected],
+                            backgroundColor: ['#f59e0b', '#3b82f6', '#0d9488', '#22c55e', '#ef4444'],
+                            borderWidth: 0,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: { size: 11, family: 'Vazirmatn' },
+                                    padding: 10,
+                                    usePointStyle: true,
+                                    pointStyle: 'circle'
+                                }
+                            }
+                        }
+                    }
+                });
+
+                // ===== نمودار عملکرد کارشناس =====
+                const ctx2 = document.getElementById('performanceChart').getContext('2d');
+                if (performanceChartInstance) performanceChartInstance.destroy();
+                
+                performanceChartInstance = new Chart(ctx2, {
+                    type: 'bar',
+                    data: {
+                        labels: ['در انتظار', 'پذیرفته شده', 'در حال انجام', 'تکمیل شده', 'رد شده'],
+                        datasets: [{
+                            label: 'تعداد درخواست‌ها',
+                            data: [pending, accepted, inProgress, completed, rejected],
+                            backgroundColor: ['#f59e0b', '#3b82f6', '#0d9488', '#22c55e', '#ef4444'],
+                            borderRadius: 6,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
+                            x: { grid: { display: false } }
+                        }
+                    }
+                });
+
+                // ===== نمودار نمونه‌های تأیید (جدید) =====
+                const ctx3 = document.getElementById('samplesChart').getContext('2d');
+                if (samplesChartInstance) samplesChartInstance.destroy();
+                
+                samplesChartInstance = new Chart(ctx3, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['در انتظار تأیید', 'تأیید شده', 'رد شده'],
+                        datasets: [{
+                            data: [verifyStats.pending || 0, verifyStats.verified || 0, verifyStats.rejected || 0],
+                            backgroundColor: ['#f59e0b', '#22c55e', '#ef4444'],
+                            borderWidth: 0,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    font: { size: 11, family: 'Vazirmatn' },
+                                    padding: 10,
+                                    usePointStyle: true,
+                                    pointStyle: 'circle'
+                                }
+                            }
+                        }
+                    }
+                });
+
+            } catch (error) {
+                console.error('Error loading analytics:', error);
+            }
+        }
+
+        // ============================================================
+        // ۶. تب‌ها
+        // ============================================================
+        
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                const tabId = 'tab-' + this.dataset.tab;
+                document.getElementById(tabId).classList.add('active');
+                
+                if (this.dataset.tab === 'analytics') {
+                    loadAnalytics();
+                }
+            });
+        });
+
+        // ============================================================
+        // ۷. بروزرسانی همه
+        // ============================================================
+        
+        function refreshAll() {
+            const btn = document.getElementById('refresh-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-arrow-clockwise ml-1 animate-spin"></i> در حال بروزرسانی...';
+            
+            Promise.all([
+                loadStats(),
+                loadRequests(),
+                loadAnalytics()
+            ]).finally(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-arrow-clockwise ml-1"></i> بروزرسانی';
+            });
+        }
+
+        document.getElementById('refresh-btn').addEventListener('click', refreshAll);
+
+        // ============================================================
+        // ۸. بارگذاری اولیه
+        // ============================================================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const token = getToken();
+            if (!token) { redirectToLogin(); return; }
+            
+            loadStats();
+            loadRequests();
+        });
+    </script>
+</body>
+</html>

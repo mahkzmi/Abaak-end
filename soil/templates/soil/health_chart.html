@@ -4,82 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>نمودار سلامت خاک - آباک</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    
+    <!-- فونت و آیکون‌ها -->
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
     <style>
         * {
             font-family: 'Vazirmatn', 'Tahoma', sans-serif;
-        }
-        
-        .nav-link {
-            transition: all 0.2s ease;
-            padding: 8px 16px;
-            border-radius: 8px;
-            color: #374151;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .nav-link:hover {
-            background: #f0fdf4;
-            color: #166534;
-        }
-        .nav-link.active {
-            background: #dcfce7;
-            color: #166534;
-            font-weight: 600;
-        }
-        
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: #2e7d32;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 700;
-            font-size: 14px;
-        }
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 14px;
-            border-radius: 8px;
-            transition: all 0.2s;
-            color: #374151;
-            text-decoration: none;
-            width: 100%;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-        }
-        .dropdown-item:hover {
-            background: #f3f4f6;
-        }
-        .dropdown-item i {
-            width: 20px;
-        }
-        .sidebar-menu {
-            display: none;
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background: white;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-            border-radius: 12px;
-            padding: 8px;
-            min-width: 200px;
-            z-index: 50;
-        }
-        .sidebar-menu.open {
-            display: block;
         }
         
         .stat-card {
@@ -127,74 +63,77 @@
         .history-row:hover {
             background: #f9fafb;
         }
+        
+        .btn-primary {
+            background: #0d9488;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        .btn-primary:hover {
+            background: #0f766e;
+        }
+        .btn-secondary {
+            background: #e5e7eb;
+            color: #374151;
+            padding: 8px 20px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 14px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+        .btn-secondary:hover {
+            background: #d1d5db;
+        }
     </style>
 </head>
-<body class="bg-gray-50">
+<body>
+
+    <!-- ============================================================ -->
+    <!-- هدر یکپارچه با منطق نقش                                       -->
+    <!-- ============================================================ -->
+    {% include 'includes/header.html' %}
+
+    <!-- ============================================================ -->
+    <!-- محتوای اصلی                                                   -->
+    <!-- ============================================================ -->
     <div class="container mx-auto px-4 py-8">
-        
-        <!-- ==================== هدر یکپارچه ==================== -->
-        <nav class="bg-white rounded-xl shadow-lg p-4 mb-6">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <a href="/" class="flex items-center gap-3 hover:opacity-80 transition">
-                    <i class="bi bi-tree-fill text-3xl text-green-700"></i>
-                    <div>
-                        <h1 class="text-2xl font-bold text-green-700">آباک</h1>
-                        <p class="text-xs text-gray-500">سامانه هوشمند تحلیل خاک</p>
-                    </div>
-                </a>
 
-                <div class="hidden md:flex items-center gap-1 flex-wrap" id="main-menu"></div>
-
-                <div class="flex items-center gap-3">
-                    <div class="relative">
-                        <button id="user-menu-btn" class="flex items-center gap-2 hover:bg-gray-100 p-2 rounded-lg transition">
-                            <div class="user-avatar" id="user-avatar">ک</div>
-                            <i class="bi bi-chevron-down text-gray-400 text-sm"></i>
-                        </button>
-                        <div id="user-dropdown" class="sidebar-menu">
-                            <div class="px-4 py-3 border-b border-gray-100">
-                                <div class="font-bold text-gray-800" id="user-name">کاربر</div>
-                                <div class="text-xs text-gray-500" id="user-role">کشاورز</div>
-                            </div>
-                            <a href="/profile/" class="dropdown-item"><i class="bi bi-person"></i> پروفایل</a>
-                            <a href="/dashboard/" class="dropdown-item"><i class="bi bi-speedometer2"></i> داشبورد</a>
-                            <a href="/subscription/" class="dropdown-item"><i class="bi bi-credit-card"></i> اشتراک</a>
-                            <hr class="my-1">
-                            <button id="logout-btn" class="dropdown-item text-red-600 hover:bg-red-50">
-                                <i class="bi bi-box-arrow-left"></i> خروج
-                            </button>
-                        </div>
-                    </div>
-                    <button id="mobile-menu-btn" class="md:hidden text-gray-600 hover:text-gray-800 p-2">
-                        <i class="bi bi-list text-2xl"></i>
-                    </button>
-                </div>
-            </div>
-            <div id="mobile-menu" class="md:hidden hidden mt-4 pt-4 border-t border-gray-100">
-                <div class="flex flex-col space-y-1" id="mobile-menu-items"></div>
-            </div>
-        </nav>
-
-        <!-- ==================== محتوای اصلی ==================== -->
-        <div class="flex justify-between items-center mb-6">
+        <!-- ===== هدر صفحه ===== -->
+        <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
             <div>
                 <h1 class="text-2xl font-bold text-green-700">📈 روند سلامت خاک</h1>
-                <p class="text-gray-600">تغییرات شاخص سلامت خاک در طول زمان</p>
+                <p class="text-gray-600 text-sm">تغییرات شاخص سلامت خاک در طول زمان</p>
             </div>
-            <a href="/dashboard/" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-300 transition text-sm">
-                <i class="bi bi-arrow-right ml-1"></i> بازگشت
-            </a>
+            <div class="flex flex-wrap gap-2">
+                <a href="/dashboard/" class="btn-secondary text-sm">
+                    <i class="bi bi-arrow-right ml-1"></i> بازگشت
+                </a>
+            </div>
         </div>
 
-        <!-- انتخاب مزرعه -->
-        <div class="bg-white p-4 rounded-lg shadow-lg mb-6">
+        <!-- ===== انتخاب مزرعه ===== -->
+        <div class="bg-white p-4 rounded-lg shadow-lg mb-6 border border-gray-100">
             <label class="block text-sm font-medium text-gray-700 mb-2">انتخاب مزرعه</label>
             <select id="farm-select" class="w-full md:w-1/2 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
                 <option value="">انتخاب مزرعه...</option>
             </select>
         </div>
 
-        <!-- ==================== کارت‌های آمار ==================== -->
+        <!-- ===== کارت‌های آمار ===== -->
         <div id="stats-container" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 hidden">
             <div class="stat-card">
                 <div class="stat-label">میانگین DSHI</div>
@@ -214,10 +153,10 @@
             </div>
         </div>
 
-        <!-- ==================== نمودارهای تحلیلی ==================== -->
+        <!-- ===== نمودارهای تحلیلی ===== -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
             <!-- نمودار اصلی DSHI -->
-            <div class="bg-white p-4 rounded-lg shadow-lg">
+            <div class="bg-white p-4 rounded-lg shadow-lg border border-gray-100">
                 <h3 class="font-bold text-gray-800 mb-3">📊 روند شاخص سلامت خاک</h3>
                 <div class="chart-container">
                     <canvas id="healthChart"></canvas>
@@ -225,7 +164,7 @@
             </div>
 
             <!-- نمودار مقایسه پارامترها -->
-            <div class="bg-white p-4 rounded-lg shadow-lg">
+            <div class="bg-white p-4 rounded-lg shadow-lg border border-gray-100">
                 <h3 class="font-bold text-gray-800 mb-3">📊 مقایسه پارامترهای خاک</h3>
                 <div class="chart-container">
                     <canvas id="parametersChart"></canvas>
@@ -233,13 +172,13 @@
             </div>
         </div>
 
-        <!-- ==================== جدول تاریخچه ==================== -->
-        <div id="history-table" class="bg-white p-4 rounded-lg shadow-lg mt-6 hidden">
+        <!-- ===== جدول تاریخچه ===== -->
+        <div id="history-table" class="bg-white p-4 rounded-lg shadow-lg border border-gray-100 mt-6 hidden">
             <h3 class="font-bold text-gray-800 mb-3">📋 تاریخچه سلامت خاک</h3>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead>
-                        <tr class="bg-gray-50">
+                        <tr class="bg-gray-50 border-b border-gray-200">
                             <th class="px-4 py-2 text-right">تاریخ</th>
                             <th class="px-4 py-2 text-right">DSHI</th>
                             <th class="px-4 py-2 text-right">سطح</th>
@@ -252,8 +191,19 @@
                 </table>
             </div>
         </div>
+
+        <!-- ===== پیام بدون داده ===== -->
+        <div id="no-data-message" class="text-center text-gray-500 py-12 bg-white rounded-lg border border-gray-100 hidden">
+            <i class="bi bi-inbox text-4xl"></i>
+            <p class="mt-2">هیچ داده‌ای برای این مزرعه موجود نیست</p>
+            <p class="text-sm text-gray-400">لطفاً ابتدا یک تحلیل خاک برای این مزرعه ثبت کنید</p>
+        </div>
+
     </div>
 
+    <!-- ============================================================ -->
+    <!-- JavaScript                                                   -->
+    <!-- ============================================================ -->
     <script>
         let chartInstance = null;
         let paramsChartInstance = null;
@@ -261,161 +211,26 @@
         // ============================================================
         // ۰. توابع کمکی
         // ============================================================
+        
         function getToken() {
             return localStorage.getItem('access_token');
         }
 
-        function getUserInfo() {
-            try {
-                const token = getToken();
-                if (!token) return null;
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                return {
-                    username: payload.username || 'کاربر',
-                    role: payload.role || 'کشاورز'
-                };
-            } catch {
-                return null;
-            }
+        function redirectToLogin() {
+            localStorage.removeItem('access_token');
+            localStorage.removeItem('refresh_token');
+            window.location.href = '/login/';
         }
 
         // ============================================================
-        // منوی مبتنی بر نقش
+        // ۱. بارگذاری مزارع
         // ============================================================
-        function getMenuItems(role) {
-            const allMenus = {
-                'FARMER': [
-                    { url: '/map/', icon: 'bi-map', label: 'نقشه' },
-                    { url: '/dashboard/', icon: 'bi-speedometer2', label: 'داشبورد' },
-                    { url: '/farms/', icon: 'bi-tree', label: 'مزارع' },
-                    { url: '/health-chart/', icon: 'bi-graph-up', label: 'روند سلامت' },
-                    { url: '/expert-request/', icon: 'bi-person-badge', label: 'درخواست کارشناس' },
-                ],
-                'EXPERT': [
-                    { url: '/verify/', icon: 'bi-check-circle', label: 'تأیید نمونه' },
-                    { url: '/expert-request/', icon: 'bi-person-badge', label: 'درخواست‌ها' },
-                    { url: '/dashboard/', icon: 'bi-speedometer2', label: 'داشبورد' },
-                ],
-                'LAB': [
-                    { url: '/lab/', icon: 'bi-flask', label: 'ثبت نمونه' },
-                    { url: '/dashboard/', icon: 'bi-speedometer2', label: 'داشبورد' },
-                ],
-                'CRM': [
-                    { url: '/expert-request/', icon: 'bi-person-badge', label: 'درخواست‌ها' },
-                    { url: '/dashboard/', icon: 'bi-speedometer2', label: 'داشبورد' },
-                ],
-                'ADMIN': [
-                    { url: '/map/', icon: 'bi-map', label: 'نقشه' },
-                    { url: '/dashboard/', icon: 'bi-speedometer2', label: 'داشبورد' },
-                    { url: '/farms/', icon: 'bi-tree', label: 'مزارع' },
-                    { url: '/health-chart/', icon: 'bi-graph-up', label: 'روند سلامت' },
-                    { url: '/expert-request/', icon: 'bi-person-badge', label: 'درخواست کارشناس' },
-                    { url: '/lab/', icon: 'bi-flask', label: 'آزمایشگاه' },
-                    { url: '/verify/', icon: 'bi-check-circle', label: 'تأیید' },
-                ],
-            };
-            return allMenus[role] || allMenus['FARMER'];
-        }
-
-        function loadMenu() {
-            const role = getUserInfo()?.role || 'FARMER';
-            const menuItems = getMenuItems(role);
-            
-            const mainMenu = document.getElementById('main-menu');
-            const mobileMenu = document.getElementById('mobile-menu-items');
-            
-            if (mainMenu) {
-                mainMenu.innerHTML = menuItems.map(item => `
-                    <a href="${item.url}" class="nav-link ${window.location.pathname === item.url ? 'active' : ''}">
-                        <i class="bi ${item.icon}"></i> ${item.label}
-                    </a>
-                `).join('');
-            }
-            
-            if (mobileMenu) {
-                mobileMenu.innerHTML = menuItems.map(item => `
-                    <a href="${item.url}" class="nav-link block ${window.location.pathname === item.url ? 'active' : ''}">
-                        <i class="bi ${item.icon} ml-2"></i> ${item.label}
-                    </a>
-                `).join('');
-            }
-        }
-
-        // ============================================================
-        // بررسی دسترسی به صفحه
-        // ============================================================
-        function checkPageAccess() {
-            const role = getUserInfo()?.role || 'FARMER';
-            const currentPath = window.location.pathname;
-            
-            const rolePages = {
-                'FARMER': ['/', '/map/', '/dashboard/', '/farms/', '/health-chart/', '/expert-request/', '/profile/', '/subscription/'],
-                'EXPERT': ['/', '/verify/', '/expert-request/', '/profile/', '/dashboard/'],
-                'LAB': ['/', '/lab/', '/profile/', '/dashboard/'],
-                'CRM': ['/', '/expert-request/', '/profile/', '/dashboard/'],
-                'ADMIN': ['/', '/map/', '/dashboard/', '/farms/', '/health-chart/', '/expert-request/', '/lab/', '/verify/', '/profile/', '/subscription/'],
-            };
-            
-            const allowedPages = rolePages[role] || rolePages['FARMER'];
-            
-            if (!allowedPages.includes(currentPath)) {
-                const redirectMap = {
-                    'FARMER': '/map/',
-                    'EXPERT': '/verify/',
-                    'LAB': '/lab/',
-                    'CRM': '/expert-request/',
-                    'ADMIN': '/',
-                };
-                window.location.href = redirectMap[role] || '/';
-                return false;
-            }
-            return true;
-        }
-
-        // ============================================================
-        // منوها
-        // ============================================================
-        document.getElementById('user-menu-btn').addEventListener('click', function(e) {
-            e.stopPropagation();
-            document.getElementById('user-dropdown').classList.toggle('open');
-        });
-
-        document.addEventListener('click', function() {
-            document.getElementById('user-dropdown').classList.remove('open');
-        });
-
-        document.getElementById('mobile-menu-btn').addEventListener('click', function() {
-            document.getElementById('mobile-menu').classList.toggle('hidden');
-        });
-
-        function updateUserUI() {
-            const info = getUserInfo();
-            if (info) {
-                document.getElementById('user-name').textContent = info.username;
-                document.getElementById('user-role').textContent = info.role;
-                document.getElementById('user-avatar').textContent = info.username.charAt(0).toUpperCase();
-            }
-        }
-
-        // ============================================================
-        // خروج
-        // ============================================================
-        document.getElementById('logout-btn').addEventListener('click', function() {
-            if (confirm('آیا مطمئن هستید که می‌خواهید خارج شوید؟')) {
-                localStorage.removeItem('access_token');
-                localStorage.removeItem('refresh_token');
-                window.location.href = '/login/';
-            }
-        });
-
-        // ============================================================
-        // بارگذاری مزارع (رفع خطا)
-        // ============================================================
+        
         async function loadFarms() {
             try {
                 const token = getToken();
                 if (!token) {
-                    window.location.href = '/login/';
+                    redirectToLogin();
                     return;
                 }
 
@@ -424,9 +239,7 @@
                 });
 
                 if (response.status === 401) {
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
-                    window.location.href = '/login/';
+                    redirectToLogin();
                     return;
                 }
 
@@ -436,7 +249,6 @@
 
                 let farms = await response.json();
                 
-                // ============ بررسی اینکه farms آرایه است ============
                 if (farms.results && Array.isArray(farms.results)) {
                     farms = farms.results;
                 } else if (!Array.isArray(farms)) {
@@ -467,21 +279,23 @@
         }
 
         // ============================================================
-        // بارگذاری تاریخچه DSHI
+        // ۲. بارگذاری تاریخچه DSHI
         // ============================================================
+        
         async function loadHealthHistory(farmId) {
             if (!farmId) {
                 document.getElementById('stats-container').classList.add('hidden');
                 document.getElementById('history-table').classList.add('hidden');
-                if (chartInstance) chartInstance.destroy();
-                if (paramsChartInstance) paramsChartInstance.destroy();
+                document.getElementById('no-data-message').classList.add('hidden');
+                if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+                if (paramsChartInstance) { paramsChartInstance.destroy(); paramsChartInstance = null; }
                 return;
             }
 
             try {
                 const token = getToken();
                 if (!token) {
-                    window.location.href = '/login/';
+                    redirectToLogin();
                     return;
                 }
 
@@ -490,9 +304,7 @@
                 });
 
                 if (response.status === 401) {
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
-                    window.location.href = '/login/';
+                    redirectToLogin();
                     return;
                 }
 
@@ -514,6 +326,7 @@
                 
                 document.getElementById('stats-container').classList.remove('hidden');
                 document.getElementById('history-table').classList.remove('hidden');
+                document.getElementById('no-data-message').classList.add('hidden');
 
             } catch (error) {
                 console.error('خطا:', error);
@@ -521,28 +334,53 @@
             }
         }
 
+        // ============================================================
+        // ۳. نمایش بدون داده
+        // ============================================================
+        
         function showNoData() {
             document.getElementById('stats-container').classList.add('hidden');
             document.getElementById('history-table').classList.add('hidden');
-            if (chartInstance) chartInstance.destroy();
-            if (paramsChartInstance) paramsChartInstance.destroy();
+            document.getElementById('no-data-message').classList.remove('hidden');
             
+            if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
+            if (paramsChartInstance) { paramsChartInstance.destroy(); paramsChartInstance = null; }
+            
+            // نمایش نمودار خالی
             const ctx = document.getElementById('healthChart').getContext('2d');
             chartInstance = new Chart(ctx, {
                 type: 'line',
-                data: { labels: ['بدون داده'], datasets: [{ label: 'DSHI', data: [0], borderColor: '#9ca3af' }] },
-                options: { responsive: true, plugins: { legend: { display: false }, title: { display: true, text: 'هیچ داده‌ای موجود نیست', color: '#6b7280' } } }
+                data: { 
+                    labels: ['بدون داده'], 
+                    datasets: [{ 
+                        label: 'DSHI', 
+                        data: [0], 
+                        borderColor: '#9ca3af',
+                        backgroundColor: 'rgba(156, 163, 175, 0.1)',
+                        pointBackgroundColor: '#9ca3af'
+                    }] 
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        title: { display: true, text: 'هیچ داده‌ای موجود نیست', color: '#6b7280' }
+                    }
+                }
             });
         }
 
         function showError(message) {
             document.getElementById('stats-container').classList.add('hidden');
             document.getElementById('history-table').classList.add('hidden');
+            document.getElementById('no-data-message').classList.add('hidden');
         }
 
         // ============================================================
-        // به‌روزرسانی آمار
+        // ۴. به‌روزرسانی آمار
         // ============================================================
+        
         function updateStats(data) {
             const history = data.history;
             const last = history[history.length - 1];
@@ -559,26 +397,27 @@
                 trendEl.textContent = `+${trendPercent}%`;
                 trendEl.className = 'stat-number text-green-600';
                 statusEl.textContent = '📈 در حال بهبود';
-                statusEl.className = 'stat-number text-green-600';
+                statusEl.className = 'stat-number text-green-600 text-base';
             } else if (data.trend === 'declining') {
                 trendEl.textContent = `${trendPercent}%`;
                 trendEl.className = 'stat-number text-red-600';
                 statusEl.textContent = '📉 در حال کاهش';
-                statusEl.className = 'stat-number text-red-600';
+                statusEl.className = 'stat-number text-red-600 text-base';
             } else {
                 trendEl.textContent = '۰%';
                 trendEl.className = 'stat-number text-gray-600';
                 statusEl.textContent = '➖ ثابت';
-                statusEl.className = 'stat-number text-gray-600';
+                statusEl.className = 'stat-number text-gray-600 text-base';
             }
         }
 
         // ============================================================
-        // به‌روزرسانی نمودار اصلی DSHI
+        // ۵. به‌روزرسانی نمودار اصلی DSHI
         // ============================================================
+        
         function updateChart(data) {
             const ctx = document.getElementById('healthChart').getContext('2d');
-            if (chartInstance) chartInstance.destroy();
+            if (chartInstance) { chartInstance.destroy(); chartInstance = null; }
 
             const history = data.history;
             const dates = history.map(h => h.date);
@@ -598,8 +437,8 @@
                     datasets: [{
                         label: 'شاخص سلامت خاک (DSHI)',
                         data: values,
-                        borderColor: '#2e7d32',
-                        backgroundColor: 'rgba(46, 125, 50, 0.1)',
+                        borderColor: '#0d9488',
+                        backgroundColor: 'rgba(13, 148, 136, 0.1)',
                         fill: true,
                         tension: 0.3,
                         pointBackgroundColor: colors,
@@ -612,11 +451,27 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: true, position: 'top', labels: { font: { size: 12 } } },
-                        tooltip: { callbacks: { label: function(ctx) { return `DSHI: ${ctx.parsed.y}%`; } } }
+                        legend: { 
+                            display: true, 
+                            position: 'top', 
+                            labels: { 
+                                font: { size: 12, family: 'Vazirmatn' },
+                                color: '#374151'
+                            } 
+                        },
+                        tooltip: { 
+                            callbacks: { 
+                                label: function(ctx) { return `DSHI: ${ctx.parsed.y}%`; } 
+                            } 
+                        }
                     },
                     scales: {
-                        y: { min: 0, max: 100, ticks: { callback: function(v) { return v + '%'; } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        y: { 
+                            min: 0, 
+                            max: 100, 
+                            ticks: { callback: function(v) { return v + '%'; } }, 
+                            grid: { color: 'rgba(0,0,0,0.05)' } 
+                        },
                         x: { grid: { display: false } }
                     }
                 }
@@ -624,11 +479,12 @@
         }
 
         // ============================================================
-        // نمودار مقایسه پارامترها
+        // ۶. نمودار مقایسه پارامترها
         // ============================================================
+        
         function updateParamsChart(data) {
             const ctx = document.getElementById('parametersChart').getContext('2d');
-            if (paramsChartInstance) paramsChartInstance.destroy();
+            if (paramsChartInstance) { paramsChartInstance.destroy(); paramsChartInstance = null; }
 
             const history = data.history;
             const last = history[history.length - 1];
@@ -645,13 +501,15 @@
                             backgroundColor: 'rgba(59, 130, 246, 0.7)',
                             borderColor: '#3b82f6',
                             borderWidth: 1,
+                            borderRadius: 4,
                         },
                         {
                             label: 'آخرین تحلیل',
                             data: [last.ph, last.ec, last.organic_matter],
-                            backgroundColor: 'rgba(34, 197, 94, 0.7)',
-                            borderColor: '#22c55e',
+                            backgroundColor: 'rgba(13, 148, 136, 0.7)',
+                            borderColor: '#0d9488',
                             borderWidth: 1,
+                            borderRadius: 4,
                         }
                     ]
                 },
@@ -659,8 +517,19 @@
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
-                        legend: { display: true, position: 'top', labels: { font: { size: 12 } } },
-                        tooltip: { callbacks: { label: function(ctx) { return `${ctx.dataset.label}: ${ctx.parsed.y}`; } } }
+                        legend: { 
+                            display: true, 
+                            position: 'top', 
+                            labels: { 
+                                font: { size: 12, family: 'Vazirmatn' },
+                                color: '#374151'
+                            } 
+                        },
+                        tooltip: { 
+                            callbacks: { 
+                                label: function(ctx) { return `${ctx.dataset.label}: ${ctx.parsed.y}`; } 
+                            } 
+                        }
                     },
                     scales: {
                         y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.05)' } },
@@ -671,51 +540,57 @@
         }
 
         // ============================================================
-        // به‌روزرسانی جدول
+        // ۷. به‌روزرسانی جدول
         // ============================================================
+        
         function updateTable(data) {
             const tbody = document.getElementById('history-body');
             const history = data.history;
 
-            const levelColors = {
-                'عالی': 'level-excellent',
-                'خوب': 'level-good',
-                'متوسط': 'level-fair',
-                'ضعیف': 'level-poor',
+            const levelMap = {
+                'EXCELLENT': { label: 'عالی', class: 'level-excellent' },
+                'GOOD': { label: 'خوب', class: 'level-good' },
+                'FAIR': { label: 'متوسط', class: 'level-fair' },
+                'POOR': { label: 'ضعیف', class: 'level-poor' },
             };
 
-            tbody.innerHTML = history.map(h => `
-                <tr class="history-row border-b border-gray-100">
-                    <td class="px-4 py-2">${h.date}</td>
-                    <td class="px-4 py-2 font-bold">${h.health_index}%</td>
-                    <td class="px-4 py-2"><span class="health-level-badge ${levelColors[h.health_level] || ''}">${h.health_level}</span></td>
-                    <td class="px-4 py-2">${h.ph}</td>
-                    <td class="px-4 py-2">${h.ec}</td>
-                    <td class="px-4 py-2">${h.organic_matter}%</td>
-                </tr>
-            `).join('');
+            // نمایش معکوس برای آخرین داده در بالا
+            const sortedHistory = [...history].reverse();
+
+            tbody.innerHTML = sortedHistory.map(h => {
+                const level = levelMap[h.health_level] || { label: h.health_level || 'نامشخص', class: '' };
+                return `
+                    <tr class="history-row border-b border-gray-100 hover:bg-gray-50 transition">
+                        <td class="px-4 py-2 text-gray-600">${h.date}</td>
+                        <td class="px-4 py-2 font-bold">${h.health_index}%</td>
+                        <td class="px-4 py-2"><span class="health-level-badge ${level.class}">${level.label}</span></td>
+                        <td class="px-4 py-2">${h.ph}</td>
+                        <td class="px-4 py-2">${h.ec}</td>
+                        <td class="px-4 py-2">${h.organic_matter}%</td>
+                    </tr>
+                `;
+            }).join('');
         }
 
         // ============================================================
-        // رویداد تغییر مزرعه
+        // ۸. رویداد تغییر مزرعه
         // ============================================================
+        
         document.getElementById('farm-select').addEventListener('change', function() {
             loadHealthHistory(this.value);
         });
 
         // ============================================================
-        // بارگذاری اولیه
+        // ۹. بارگذاری اولیه
         // ============================================================
+        
         document.addEventListener('DOMContentLoaded', function() {
             const token = getToken();
             if (!token) {
-                window.location.href = '/login/';
+                redirectToLogin();
                 return;
             }
             
-            if (!checkPageAccess()) return;
-            loadMenu();
-            updateUserUI();
             loadFarms();
         });
     </script>

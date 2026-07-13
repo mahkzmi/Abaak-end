@@ -1,61 +1,648 @@
-<!-- بخش منوی اصلی (دسکتاپ) -->
-<div class="hidden md:flex items-center gap-1 flex-wrap" id="main-menu">
-    <!-- منو توسط JavaScript تولید می‌شود -->
-</div>
+<!-- ============================================================ -->
+<!-- header.html - هدر یکپارچه آباک (Hybrid)                      -->
+<!-- پشتیبانی از Django Sessions و JWT                            -->
+<!-- ============================================================ -->
 
-<!-- بخش منوی موبایل -->
-<div id="mobile-menu" class="md:hidden hidden mt-4 pt-4 border-t border-gray-100">
-    <div class="flex flex-col space-y-1" id="mobile-menu-items">
-        <!-- منو توسط JavaScript تولید می‌شود -->
-    </div>
-</div>
-
-// ============================================================
-// بارگذاری منو بر اساس نقش
-// ============================================================
-function loadMenu() {
-    const role = getUserRole();
-    if (!role) return;
-
-    const menuItems = getMenuItems(role);
-    const mainMenu = document.getElementById('main-menu');
-    const mobileMenu = document.getElementById('mobile-menu-items');
-
-    if (mainMenu) {
-        mainMenu.innerHTML = menuItems.map(item => `
-            <a href="${item.url}" class="nav-link ${window.location.pathname === item.url ? 'active' : ''}">
-                <i class="bi ${item.icon}"></i> ${item.label}
+<header class="site-header">
+    <nav class="nav-container">
+        <!-- ========== لوگو ========== -->
+        <div class="logo">
+            <a href="/" class="logo-link">
+                <i class="bi bi-tree-fill logo-icon"></i>
+                <span class="logo-text">آباک</span>
             </a>
-        `).join('');
+        </div>
+
+        <!-- ========== منوی اصلی ========== -->
+        <ul class="nav-links" id="main-nav">
+            <li><a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">صفحه اصلی</a></li>
+            
+            <!-- آیتم‌های پویا با Django (برای صفحات عادی) -->
+            {% if user.is_authenticated %}
+                {% if user.role == 'FARMER' or user.role == 'ADMIN' %}
+                    <li><a href="/map/" class="nav-link {% if 'map' in request.path %}active{% endif %}">نقشه</a></li>
+                    <li><a href="/dashboard/" class="nav-link {% if 'dashboard' in request.path %}active{% endif %}">داشبورد</a></li>
+                    <li><a href="/farms/" class="nav-link {% if 'farms' in request.path %}active{% endif %}">مزارع من</a></li>
+                    <li><a href="/health-chart/" class="nav-link {% if 'health' in request.path %}active{% endif %}">روند سلامت</a></li>
+                    <li><a href="/expert-request/" class="nav-link {% if 'expert-request' in request.path %}active{% endif %}">درخواست کارشناس</a></li>
+                {% endif %}
+
+                {% if user.role == 'LAB' or user.role == 'ADMIN' %}
+                    <li><a href="/lab/" class="nav-link {% if 'lab' in request.path %}active{% endif %}">آزمایشگاه</a></li>
+                {% endif %}
+
+                {% if user.role == 'EXPERT' or user.role == 'ADMIN' %}
+                    <li><a href="/expert_dashboard/" class="nav-link {% if 'expert' in request.path %}active{% endif %}">پنل کارشناس</a></li>
+                    <li><a href="/verify/" class="nav-link {% if 'verify' in request.path %}active{% endif %}">تأیید نمونه</a></li>
+                {% endif %}
+
+                {% if user.role == 'CRM' or user.role == 'ADMIN' %}
+                    <li><a href="/crm/dashboard/" class="nav-link {% if 'crm' in request.path %}active{% endif %}">پنل CRM</a></li>
+                {% endif %}
+
+                {% if user.role == 'ADMIN' %}
+                    <li><a href="/admin/" class="nav-link {% if 'admin' in request.path %}active{% endif %}">مدیریت سیستم</a></li>
+                {% endif %}
+            {% endif %}
+            
+            <!-- آیتم‌های پویا با JavaScript (برای صفحات SPA) -->
+            <li class="js-nav-item" style="display:none;" data-role="FARMER,ADMIN">
+                <a href="/map/" class="nav-link">نقشه</a>
+            </li>
+            <li class="js-nav-item" style="display:none;" data-role="FARMER,ADMIN">
+                <a href="/dashboard/" class="nav-link">داشبورد</a>
+            </li>
+            <li class="js-nav-item" style="display:none;" data-role="FARMER,ADMIN">
+                <a href="/farms/" class="nav-link">مزارع من</a>
+            </li>
+            <li class="js-nav-item" style="display:none;" data-role="FARMER,ADMIN">
+                <a href="/health-chart/" class="nav-link">روند سلامت</a>
+            </li>
+            <li class="js-nav-item" style="display:none;" data-role="FARMER,ADMIN,CRM">
+                <a href="/expert-request/" class="nav-link">درخواست کارشناس</a>
+            </li>
+            <li class="js-nav-item" style="display:none;" data-role="LAB,ADMIN">
+                <a href="/lab/" class="nav-link">آزمایشگاه</a>
+            </li>
+            <li class="js-nav-item" style="display:none;" data-role="EXPERT,ADMIN">
+                <a href="/expert_dashboard/" class="nav-link">پنل کارشناس</a>
+            </li>
+            <li class="js-nav-item" style="display:none;" data-role="EXPERT,ADMIN">
+                <a href="/verify/" class="nav-link">تأیید نمونه</a>
+            </li>
+            <li class="js-nav-item" style="display:none;" data-role="CRM,ADMIN">
+                <a href="/crm/dashboard/" class="nav-link">پنل CRM</a>
+            </li>
+            <li class="js-nav-item" style="display:none;" data-role="ADMIN">
+                <a href="/admin/" class="nav-link">مدیریت سیستم</a>
+            </li>
+        </ul>
+
+        <!-- ========== بخش کاربر ========== -->
+        <div class="user-section">
+            {% if user.is_authenticated %}
+                <!-- حالت Django: کاربر از Session -->
+                <div class="user-dropdown" id="user-dropdown-django">
+                    <button class="user-dropdown-trigger" aria-label="منوی کاربری">
+                        <div class="user-avatar">{{ user.get_full_name|default:user.username|first|upper }}</div>
+                        <span class="user-name">{{ user.get_full_name|default:user.username }}</span>
+                        <i class="bi bi-chevron-down dropdown-arrow"></i>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li class="dropdown-header">
+                            <div class="user-info">
+                                <span class="dropdown-user-name">{{ user.get_full_name|default:user.username }}</span>
+                                <span class="dropdown-user-role">
+                                    {% if user.role == 'FARMER' %}🌾 کشاورز
+                                    {% elif user.role == 'LAB' %}🧪 مسئول آزمایشگاه
+                                    {% elif user.role == 'EXPERT' %}👨‍🔬 کارشناس
+                                    {% elif user.role == 'CRM' %}📞 مدیر CRM
+                                    {% elif user.role == 'ADMIN' %}⚙️ مدیر کل سیستم
+                                    {% else %}👤 کاربر{% endif %}
+                                </span>
+                            </div>
+                        </li>
+                        <li class="dropdown-divider"></li>
+                        <li><a href="/profile/" class="dropdown-item"><i class="bi bi-person"></i> پروفایل</a></li>
+                        <li><a href="/dashboard/" class="dropdown-item"><i class="bi bi-speedometer2"></i> داشبورد</a></li>
+                        {% if user.role == 'FARMER' or user.role == 'ADMIN' %}
+                            <li><a href="/farms/" class="dropdown-item"><i class="bi bi-tree"></i> مزارع من</a></li>
+                            <li><a href="/map/" class="dropdown-item"><i class="bi bi-map"></i> نقشه</a></li>
+                        {% endif %}
+                        {% if user.role == 'LAB' or user.role == 'ADMIN' %}
+                            <li><a href="/lab/" class="dropdown-item"><i class="bi bi-flask"></i> پنل آزمایشگاه</a></li>
+                        {% endif %}
+                        {% if user.role == 'EXPERT' or user.role == 'ADMIN' %}
+                            <li><a href="/expert/dashboard/" class="dropdown-item"><i class="bi bi-person-badge"></i> پنل کارشناس</a></li>
+                            <li><a href="/verify/" class="dropdown-item"><i class="bi bi-check-circle"></i> تأیید نمونه</a></li>
+                        {% endif %}
+                        {% if user.role == 'CRM' or user.role == 'ADMIN' %}
+                            <li><a href="/crm/dashboard/" class="dropdown-item"><i class="bi bi-people"></i> پنل CRM</a></li>
+                        {% endif %}
+                        {% if user.role == 'ADMIN' %}
+                            <li><a href="/admin/" class="dropdown-item"><i class="bi bi-gear"></i> مدیریت سیستم</a></li>
+                        {% endif %}
+                        <li class="dropdown-divider"></li>
+                        <li><a href="/logout/" class="dropdown-item logout-item"><i class="bi bi-box-arrow-right"></i> خروج</a></li>
+                    </ul>
+                </div>
+            {% else %}
+                <!-- حالت پیش‌فرض: کاربر از JWT (JavaScript) -->
+                <div class="user-dropdown" id="user-dropdown-js" style="display:none;">
+                    <button class="user-dropdown-trigger" aria-label="منوی کاربری">
+                        <div class="user-avatar" id="header-avatar">ک</div>
+                        <span class="user-name" id="header-username">کاربر</span>
+                        <i class="bi bi-chevron-down dropdown-arrow"></i>
+                    </button>
+                    <ul class="dropdown-menu" id="header-dropdown-menu">
+                        <li class="dropdown-header">
+                            <div class="user-info">
+                                <span class="dropdown-user-name" id="header-fullname">کاربر</span>
+                                <span class="dropdown-user-role" id="header-role">👤 کاربر</span>
+                            </div>
+                        </li>
+                        <li class="dropdown-divider"></li>
+                        <li><a href="/profile/" class="dropdown-item"><i class="bi bi-person"></i> پروفایل</a></li>
+                        <li><a href="/dashboard/" class="dropdown-item"><i class="bi bi-speedometer2"></i> داشبورد</a></li>
+                        <li class="js-menu-item" style="display:none;" data-role="FARMER,ADMIN"><a href="/farms/" class="dropdown-item"><i class="bi bi-tree"></i> مزارع من</a></li>
+                        <li class="js-menu-item" style="display:none;" data-role="FARMER,ADMIN"><a href="/map/" class="dropdown-item"><i class="bi bi-map"></i> نقشه</a></li>
+                        <li class="js-menu-item" style="display:none;" data-role="LAB,ADMIN"><a href="/lab/" class="dropdown-item"><i class="bi bi-flask"></i> پنل آزمایشگاه</a></li>
+                        <li class="js-menu-item" style="display:none;" data-role="EXPERT,ADMIN"><a href="/expert/dashboard/" class="dropdown-item"><i class="bi bi-person-badge"></i> پنل کارشناس</a></li>
+                        <li class="js-menu-item" style="display:none;" data-role="EXPERT,ADMIN"><a href="/verify/" class="dropdown-item"><i class="bi bi-check-circle"></i> تأیید نمونه</a></li>
+                        <li class="js-menu-item" style="display:none;" data-role="CRM,ADMIN"><a href="/crm/dashboard/" class="dropdown-item"><i class="bi bi-people"></i> پنل CRM</a></li>
+                        <li class="js-menu-item" style="display:none;" data-role="ADMIN"><a href="/admin/" class="dropdown-item"><i class="bi bi-gear"></i> مدیریت سیستم</a></li>
+                        <li class="dropdown-divider"></li>
+                        <li><a href="#" class="dropdown-item logout-item" id="js-logout-btn"><i class="bi bi-box-arrow-right"></i> خروج</a></li>
+                    </ul>
+                </div>
+                
+                <!-- نمایش دکمه‌های ورود/ثبت‌نام -->
+                <div class="auth-buttons" id="auth-buttons">
+                    <a href="/login/" class="btn btn-login">
+                        <i class="bi bi-box-arrow-in-left"></i> ورود
+                    </a>
+                    <a href="/register/" class="btn btn-free">
+                        <i class="bi bi-person-plus"></i> شروع رایگان
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </nav>
+</header>
+
+<!-- ============================================================ -->
+<!-- استایل‌های هدر                                                -->
+<!-- ============================================================ -->
+<style>
+    .site-header {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid #e2e8f0;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        padding: 0 1rem;
     }
 
-    if (mobileMenu) {
-        mobileMenu.innerHTML = menuItems.map(item => `
-            <a href="${item.url}" class="nav-link block ${window.location.pathname === item.url ? 'active' : ''}">
-                <i class="bi ${item.icon} ml-2"></i> ${item.label}
-            </a>
-        `).join('');
+    .nav-container {
+        max-width: 1280px;
+        margin: 0 auto;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        height: 70px;
+        gap: 1rem;
     }
-}
 
-// ============================================================
-// بارگذاری اولیه
-// ============================================================
+    /* لوگو */
+    .logo-link {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        text-decoration: none;
+    }
+    .logo-icon {
+        font-size: 28px;
+        color: #0d9488;
+    }
+    .logo-text {
+        font-size: 22px;
+        font-weight: 800;
+        color: #0d9488;
+        letter-spacing: -0.5px;
+    }
+
+    /* منوی اصلی */
+    .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        list-style: none;
+        margin: 0;
+        padding: 0;
+        flex-wrap: wrap;
+    }
+    .nav-link {
+        padding: 6px 14px;
+        border-radius: 8px;
+        color: #475569;
+        font-size: 14px;
+        font-weight: 500;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    .nav-link:hover {
+        color: #0d9488;
+        background: rgba(13, 148, 136, 0.06);
+    }
+    .nav-link.active {
+        color: #0d9488;
+        background: rgba(13, 148, 136, 0.1);
+    }
+
+    /* بخش کاربر */
+    .user-section {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+    }
+
+    .auth-buttons {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 8px 20px;
+        border-radius: 40px;
+        font-size: 14px;
+        font-weight: 600;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        border: none;
+        cursor: pointer;
+    }
+    .btn-login {
+        color: #475569;
+        background: transparent;
+        border: 1px solid #e2e8f0;
+    }
+    .btn-login:hover {
+        background: #f8fafc;
+    }
+    .btn-free {
+        color: white;
+        background: #0d9488;
+        box-shadow: 0 4px 14px rgba(13, 148, 136, 0.35);
+    }
+    .btn-free:hover {
+        background: #0f766e;
+        transform: translateY(-2px);
+    }
+
+    /* منوی کشویی */
+    .user-dropdown {
+        position: relative;
+    }
+    .user-dropdown-trigger {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 12px 6px 8px;
+        border-radius: 40px;
+        border: 1px solid transparent;
+        background: transparent;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: inherit;
+        font-size: 14px;
+        color: #1e293b;
+    }
+    .user-dropdown-trigger:hover {
+        background: #f8fafc;
+        border-color: #e2e8f0;
+    }
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #0d9488;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 14px;
+        flex-shrink: 0;
+    }
+    .user-name {
+        font-weight: 500;
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .dropdown-arrow {
+        font-size: 12px;
+        color: #94a3b8;
+        transition: transform 0.2s ease;
+    }
+    .user-dropdown-trigger[aria-expanded="true"] .dropdown-arrow {
+        transform: rotate(180deg);
+    }
+
+    .dropdown-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        min-width: 220px;
+        background: white;
+        border-radius: 16px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.12);
+        border: 1px solid #e2e8f0;
+        padding: 8px;
+        margin: 0;
+        list-style: none;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-8px);
+        transition: all 0.2s ease;
+        z-index: 9999;
+    }
+    .user-dropdown:hover .dropdown-menu,
+    .user-dropdown-trigger[aria-expanded="true"] + .dropdown-menu {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .dropdown-header {
+        padding: 8px 12px 4px 12px;
+        cursor: default;
+    }
+    .user-info {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .dropdown-user-name {
+        font-weight: 600;
+        color: #0f172a;
+        font-size: 14px;
+    }
+    .dropdown-user-role {
+        font-size: 12px;
+        color: #0d9488;
+        font-weight: 500;
+    }
+    .dropdown-divider {
+        height: 1px;
+        background: #e2e8f0;
+        margin: 6px 8px;
+    }
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 14px;
+        border-radius: 12px;
+        color: #334155;
+        font-size: 14px;
+        font-weight: 400;
+        text-decoration: none;
+        transition: all 0.15s ease;
+    }
+    .dropdown-item:hover {
+        background: #f8fafc;
+        color: #0d9488;
+    }
+    .dropdown-item i {
+        font-size: 16px;
+        width: 20px;
+        text-align: center;
+        color: #94a3b8;
+    }
+    .dropdown-item:hover i {
+        color: #0d9488;
+    }
+    .logout-item {
+        color: #ef4444;
+    }
+    .logout-item:hover {
+        background: #fef2f2;
+        color: #dc2626;
+    }
+    .logout-item:hover i {
+        color: #dc2626;
+    }
+
+    /* موبایل */
+    @media (max-width: 1024px) {
+        .nav-links .nav-link {
+            font-size: 13px;
+            padding: 5px 10px;
+        }
+        .user-name {
+            max-width: 70px;
+        }
+    }
+
+    @media (max-width: 768px) {
+        .nav-links {
+            display: none;
+        }
+        .nav-container {
+            height: 60px;
+        }
+        .user-name {
+            display: none;
+        }
+        .dropdown-menu {
+            left: auto;
+            right: 0;
+            min-width: 200px;
+        }
+    }
+</style>
+
+<!-- ============================================================ -->
+<!-- اسکریپت مدیریت هدر با JWT                                     -->
+<!-- ============================================================ -->
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const token = getToken();
-    if (!token) {
-        window.location.href = '/login/';
-        return;
-    }
+    (function() {
+        'use strict';
+        
+        // ============================================================
+        // ۱. توابع کمکی
+        // ============================================================
+        
+        function getToken() {
+            return localStorage.getItem('access_token');
+        }
 
-    // بررسی دسترسی به صفحه
-    if (!checkPageAccess()) return;
+        function getUserInfoFromToken() {
+            try {
+                const token = getToken();
+                if (!token) return null;
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return {
+                    username: payload.username || payload.full_name || 'کاربر',
+                    role: payload.role || payload.user_role || 'FARMER',
+                    full_name: payload.full_name || payload.username || 'کاربر'
+                };
+            } catch (error) {
+                console.error('Error parsing JWT:', error);
+                return null;
+            }
+        }
 
-    // بارگذاری منو
-    loadMenu();
+        // ============================================================
+        // ۲. دریافت اطلاعات از API (پشتیبان)
+        // ============================================================
+        
+        async function fetchUserInfo() {
+            try {
+                const token = getToken();
+                if (!token) return null;
+                
+                const urls = [
+                    '/api/accounts/profile/',
+                    '/api/profile/',
+                    '/api/users/me/'
+                ];
+                
+                for (const url of urls) {
+                    try {
+                        const response = await fetch(url, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            return {
+                                username: data.username || data.full_name || 'کاربر',
+                                role: data.role || data.role_name || 'FARMER',
+                                full_name: data.full_name || data.username || 'کاربر'
+                            };
+                        }
+                    } catch (e) {
+                        continue;
+                    }
+                }
+                return getUserInfoFromToken();
+            } catch (error) {
+                return getUserInfoFromToken();
+            }
+        }
 
-    // به‌روزرسانی اطلاعات کاربر
-    updateUserUI();
-});
+        // ============================================================
+        // ۳. بروزرسانی هدر با اطلاعات کاربر
+        // ============================================================
+        
+        async function updateHeaderWithUser() {
+            const token = getToken();
+            
+            // المنت‌های هدر
+            const djangoUserDropdown = document.getElementById('user-dropdown-django');
+            const jsUserDropdown = document.getElementById('user-dropdown-js');
+            const authButtons = document.getElementById('auth-buttons');
+            
+            // اگر توکن وجود دارد و المنت JS وجود دارد
+            if (token && jsUserDropdown) {
+                // مخفی کردن حالت Django
+                if (djangoUserDropdown) djangoUserDropdown.style.display = 'none';
+                if (authButtons) authButtons.style.display = 'none';
+                
+                // نمایش حالت JS
+                jsUserDropdown.style.display = 'block';
+                
+                // دریافت اطلاعات کاربر
+                let info = await fetchUserInfo();
+                if (!info) info = getUserInfoFromToken();
+                
+                if (info) {
+                    const displayName = info.full_name || info.username || 'کاربر';
+                    
+                    // بروزرسانی المنت‌ها
+                    const avatarEl = document.getElementById('header-avatar');
+                    const usernameEl = document.getElementById('header-username');
+                    const fullnameEl = document.getElementById('header-fullname');
+                    const roleEl = document.getElementById('header-role');
+                    
+                    if (avatarEl) avatarEl.textContent = displayName.charAt(0).toUpperCase();
+                    if (usernameEl) usernameEl.textContent = displayName;
+                    if (fullnameEl) fullnameEl.textContent = displayName;
+                    
+                    const roleMap = {
+                        'FARMER': '🌾 کشاورز',
+                        'LAB': '🧪 مسئول آزمایشگاه',
+                        'EXPERT': '👨‍🔬 کارشناس',
+                        'ADMIN': '⚙️ مدیر کل سیستم',
+                        'CRM': '📞 مدیر CRM'
+                    };
+                    if (roleEl) roleEl.textContent = roleMap[info.role.toUpperCase()] || '👤 کاربر';
+                    
+                    // نمایش آیتم‌های منو بر اساس نقش
+                    const role = info.role.toUpperCase();
+                    document.querySelectorAll('.js-menu-item').forEach(item => {
+                        const roles = item.dataset.role.split(',');
+                        item.style.display = roles.includes(role) || roles.includes('ALL') ? 'block' : 'none';
+                    });
+                    
+                    // نمایش آیتم‌های منوی اصلی
+                    document.querySelectorAll('.js-nav-item').forEach(item => {
+                        const roles = item.dataset.role.split(',');
+                        item.style.display = roles.includes(role) || roles.includes('ALL') ? 'inline-block' : 'none';
+                    });
+                }
+            } else if (!token && authButtons) {
+                // کاربر لاگین نیست
+                if (djangoUserDropdown) djangoUserDropdown.style.display = 'none';
+                if (jsUserDropdown) jsUserDropdown.style.display = 'none';
+                authButtons.style.display = 'flex';
+            }
+        }
+
+        // ============================================================
+        // ۴. مدیریت منوی کشویی
+        // ============================================================
+        
+        document.querySelectorAll('.user-dropdown-trigger').forEach(trigger => {
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const parent = this.closest('.user-dropdown');
+                const menu = parent.querySelector('.dropdown-menu');
+                const isOpen = this.getAttribute('aria-expanded') === 'true';
+                this.setAttribute('aria-expanded', !isOpen);
+            });
+        });
+
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.user-dropdown-trigger').forEach(t => {
+                t.setAttribute('aria-expanded', 'false');
+            });
+        });
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.querySelectorAll('.user-dropdown-trigger').forEach(t => {
+                    if (t.getAttribute('aria-expanded') === 'true') {
+                        t.setAttribute('aria-expanded', 'false');
+                        t.focus();
+                    }
+                });
+            }
+        });
+
+        // ============================================================
+        // ۵. خروج با JWT
+        // ============================================================
+        
+        document.getElementById('js-logout-btn').addEventListener('click', function(e) {
+            e.preventDefault();
+            if (confirm('آیا مطمئن هستید که می‌خواهید خارج شوید؟')) {
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                window.location.href = '/login/';
+            }
+        });
+
+        // ============================================================
+        // ۶. بارگذاری اولیه
+        // ============================================================
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            updateHeaderWithUser();
+        });
+        
+        // اگر صفحه با AJAX لود شد، دوباره اجرا کن
+        document.addEventListener('turbo:load', updateHeaderWithUser);
+        document.addEventListener('htmx:afterSwap', updateHeaderWithUser);
+        
+    })();
 </script>
