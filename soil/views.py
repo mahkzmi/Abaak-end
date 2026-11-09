@@ -7,6 +7,7 @@ import re
 import logging
 import time
 import traceback
+import math
 
 from django.shortcuts import get_object_or_404, render
 from django.utils import timezone
@@ -110,16 +111,13 @@ class ExpertDashboardView(LoginRequiredMixin, UserPassesTestMixin, TemplateView)
         if not user.is_authenticated:
             return False
         
-        # کاربر باید نقش EXPERT یا ADMIN داشته باشد
         try:
             profile = UserProfile.objects.get(user=user)
             return profile.role in ['EXPERT', 'ADMIN']
         except UserProfile.DoesNotExist:
-            # اگر پروفایل وجود نداشت، از is_superuser استفاده کن
             return user.is_superuser
     
     def handle_no_permission(self):
-        """در صورت عدم دسترسی، به صفحه مناسب هدایت کن"""
         return redirect_to_user_dashboard(self.request.user)
     
     def get_context_data(self, **kwargs):
@@ -144,12 +142,8 @@ def redirect_to_user_dashboard(user):
         return HttpResponseRedirect('/')
 
 
-# ================================================================
-# 3. توابع View ساده (در صورت نیاز)
-# ================================================================
-
 def expert_dashboard(request):
-    """نمایش پنل کارشناس (Fallback برای زمانی که TemplateView کار نمی‌کند)"""
+    """نمایش پنل کارشناس (Fallback)"""
     if not request.user.is_authenticated:
         return redirect_to_login()
     
@@ -165,18 +159,16 @@ def expert_dashboard(request):
 
 
 # ================================================================
-# 4. ViewSet استان‌ها و شهرستان‌ها
+# 3. ViewSet استان‌ها و شهرستان‌ها
 # ================================================================
 
 class ProvinceViewSet(viewsets.ReadOnlyModelViewSet):
-    """API برای دریافت استان‌ها"""
     queryset = Province.objects.all().order_by('name')
     serializer_class = ProvinceSerializer
     permission_classes = [AllowAny]
 
 
 class CountyViewSet(viewsets.ReadOnlyModelViewSet):
-    """API برای دریافت شهرستان‌های یک استان"""
     serializer_class = CountySerializer
     permission_classes = [AllowAny]
 
@@ -188,28 +180,25 @@ class CountyViewSet(viewsets.ReadOnlyModelViewSet):
 
 
 # ================================================================
-# 5. ViewSet نمونه‌های خاک
+# 4. ViewSet نمونه‌های خاک
 # ================================================================
 
 class SoilSampleViewSet(viewsets.ModelViewSet):
-    """API برای مدیریت نمونه‌های خاک"""
     queryset = SoilSample.objects.all().order_by('-sampling_date')
     serializer_class = SoilSampleSerializer
     permission_classes = [AllowAny]
 
 
 # ================================================================
-# 6. ViewSet مزارع
+# 5. ViewSet مزارع
 # ================================================================
 
 class FarmViewSet(viewsets.ModelViewSet):
-    """API برای مدیریت مزارع"""
     queryset = Farm.objects.all().order_by('-created_at')
     serializer_class = FarmSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        """فقط مزارع کاربر فعلی را برگردان"""
         user = self.request.user
         try:
             farmer = user.farmer_profile
@@ -219,7 +208,6 @@ class FarmViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['put'], url_path='update')
     def update_farm(self, request, pk=None):
-        """به‌روزرسانی اطلاعات مزرعه"""
         farm = get_object_or_404(Farm, pk=pk)
 
         if farm.farmer.user != request.user:
@@ -242,7 +230,6 @@ class FarmViewSet(viewsets.ModelViewSet):
             farm.province = province
 
         farm.save()
-
         serializer = FarmSerializer(farm)
         return Response({
             'success': True,
@@ -252,7 +239,6 @@ class FarmViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['delete'], url_path='delete')
     def delete_farm(self, request, pk=None):
-        """حذف مزرعه"""
         farm = get_object_or_404(Farm, pk=pk)
 
         if farm.farmer.user != request.user:
@@ -263,7 +249,6 @@ class FarmViewSet(viewsets.ModelViewSet):
 
         farm_name = farm.name
         farm.delete()
-
         return Response({
             'success': True,
             'message': f'مزرعه {farm_name} با موفقیت حذف شد'
@@ -271,12 +256,11 @@ class FarmViewSet(viewsets.ModelViewSet):
 
 
 # ================================================================
-# 7. ViewSet اصلی تحلیل خاک
+# 6. ViewSet اصلی تحلیل خاک
 # ================================================================
 
 @method_decorator(csrf_exempt, name='dispatch')
 class SoilAnalysisViewSet(viewsets.ModelViewSet):
-    """API برای مدیریت تحلیل‌های خاک"""
     queryset = SoilAnalysis.objects.all().order_by('-created_at')
     serializer_class = SoilAnalysisSerializer
 
@@ -304,7 +288,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='health-history')
     def health_history(self, request):
-        """دریافت تاریخچه DSHI برای مزرعه مشخص"""
         farm_id = request.query_params.get('farm_id')
         if not farm_id:
             return Response(
@@ -353,7 +336,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], url_path='create-farm')
     def create_farm(self, request):
-        """ثبت مزرعه جدید بر اساس پلی‌گون رسم‌شده روی نقشه"""
         logger.info(f"📥 داده دریافتی create-farm: {request.data}")
 
         user = request.user
@@ -387,7 +369,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
             )
 
         try:
-            # پردازش مختصات
             if isinstance(coordinates[0], list) and len(coordinates[0]) == 2:
                 if isinstance(coordinates[0][0], (int, float)):
                     polygon_coords = coordinates
@@ -402,7 +383,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
             if polygon_coords[0] != polygon_coords[-1]:
                 polygon_coords.append(polygon_coords[0])
 
-            # محاسبه مساحت
             area = 0
             n = len(polygon_coords)
             for i in range(n - 1):
@@ -414,7 +394,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
 
             logger.info(f"📐 مساحت محاسبه‌شده: {area_ha:.2f} هکتار")
 
-            # پیدا کردن یا ساختن کشاورز
             farmer, _ = Farmer.objects.get_or_create(
                 user=user,
                 defaults={
@@ -460,10 +439,10 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-    # ===================== تحلیل خاک =====================
+    # ===================== تحلیل خاک با درون‌یابی =====================
 
     @swagger_auto_schema(
-        operation_description="تحلیل خاک بر اساس داده‌های ورودی",
+        operation_description="تحلیل خاک بر اساس داده‌های ورودی با درون‌یابی",
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             required=['ph', 'ec', 'organic_matter', 'texture'],
@@ -499,13 +478,7 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], url_path='analyze')
     def analyze_soil(self, request):
         """
-        تحلیل خاک بر اساس داده‌های ورودی
-
-        تغییرات اعمال‌شده:
-        ۱. حذف get_or_create - همیشه نمونه جدید ایجاد شود
-        ۲. استفاده از timestamp برای کد یکتا
-        ۳. اضافه کردن لاگ برای دیباگ
-        ۴. نمایش داده‌های ورودی در خروجی
+        تحلیل خاک بر اساس داده‌های ورودی با پشتیبانی از درون‌یابی
         """
         try:
             validated_data = validate_soil_data(request.data)
@@ -531,8 +504,30 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
                 if not farm.province:
                     logger.warning("⚠️ استان مشخص نشد، از تهران به عنوان پیش‌فرض استفاده شد")
 
-            # اجرای تحلیل
-            result = SoilAnalysisEngine.analyze_soil(data, province_name)
+            # ===== دریافت همه نمونه‌ها برای درون‌یابی =====
+            all_samples = []
+            try:
+                verified_samples = SoilSample.objects.filter(is_verified=True)
+                for sample in verified_samples:
+                    all_samples.append({
+                        'latitude': sample.latitude,
+                        'longitude': sample.longitude,
+                        'ph': sample.ph,
+                        'ec': sample.ec,
+                        'organic_matter': sample.organic_matter,
+                        'nitrogen': sample.nitrogen,
+                        'phosphorus': sample.phosphorus,
+                        'potassium': sample.potassium,
+                    })
+                logger.info(f"📊 {len(all_samples)} نمونه برای درون‌یابی بارگذاری شد")
+            except Exception as e:
+                logger.warning(f"⚠️ خطا در بارگذاری نمونه‌ها: {e}")
+
+            # ===== اجرای تحلیل با درون‌یابی =====
+            result = SoilAnalysisEngine.analyze_soil(
+                data,
+                province_name,
+            )
             logger.info(f"✅ تحلیل با موفقیت انجام شد. DSHI: {result['soil_health_index']}")
 
             # ذخیره نمونه خاک (همیشه جدید)
@@ -561,7 +556,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
                 )
                 logger.info(f"📝 نمونه خاک جدید ایجاد شد: {soil_sample.sample_code}")
 
-                # ذخیره تحلیل
                 analysis = SoilAnalysis.objects.create(
                     soil_sample=soil_sample,
                     soil_health_index=result['soil_health_index'],
@@ -585,7 +579,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
                 )
                 logger.info(f"📊 تحلیل جدید ایجاد شد: ID {analysis.id}")
 
-                # ذخیره تاریخچه سلامت خاک
                 SoilHealthHistory.objects.create(
                     farm=farm,
                     analysis=analysis,
@@ -599,16 +592,8 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
                 result['analysis_id'] = analysis.id
                 result['sample_code'] = soil_sample.sample_code
 
-            # اضافه کردن داده‌های ورودی به خروجی
-            result['input_data'] = {
-                'ph': data['ph'],
-                'ec': data['ec'],
-                'organic_matter': data['organic_matter'],
-                'texture': data['texture'],
-                'nitrogen': data.get('nitrogen'),
-                'phosphorus': data.get('phosphorus'),
-                'potassium': data.get('potassium'),
-            }
+            # ===== اضافه کردن درجه اطمینان به خروجی =====
+            result['confidence'] = result.get('confidence', 70)
 
             return Response(result, status=status.HTTP_200_OK)
 
@@ -620,31 +605,40 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-    # ===================== تولید PDF =====================
+
+# ===================== تولید PDF انگلیسی =====================
 
     @action(detail=True, methods=['get'], url_path='pdf')
     def generate_pdf(self, request, pk=None):
-        """تولید PDF از تحلیل خاک"""
+        """
+        Generate and download English PDF report
+        """
         analysis = get_object_or_404(SoilAnalysis, pk=pk)
         sample = analysis.soil_sample
         farm = sample.farm
 
+        # ===== Context in English =====
         context = {
-            'analysis': analysis,
-            'sample': sample,
-            'farm': farm,
-            'farmer': farm.farmer,
-            'analysis_date': analysis.created_at.strftime('%Y/%m/%d'),
-            'health_level_display': analysis.get_health_level_display(),
+            'analysis_id': analysis.id,
+            'farm_name': farm.name,
+            'province': farm.province,
+            'analysis_date': analysis.created_at.strftime('%Y/%m/%d %H:%M'),
+            'soil_health_index': analysis.soil_health_index or 0,
+            'health_level': analysis.get_health_level_display(),
+            'ph': sample.ph or 'N/A',
+            'ec': sample.ec or 'N/A',
+            'organic_matter': sample.organic_matter or 'N/A',
+            'nitrogen': sample.nitrogen or 'N/A',
+            'phosphorus': sample.phosphorus or 'N/A',
+            'potassium': sample.potassium or 'N/A',
+            'expected_yield': analysis.expected_yield or 0,
+            'expected_profit': analysis.expected_profit or 0,
             'recommended_crops': analysis.recommended_crops[:3] if analysis.recommended_crops else [],
-            'fertilizer_recommendations': analysis.fertilizer_recommendations or {},
-            'soil_health_index': analysis.soil_health_index,
-            'expected_yield': analysis.expected_yield,
-            'expected_profit': analysis.expected_profit,
-            'management_tips': analysis.management_tips or '',
+            'management_tips': analysis.management_tips or 'No specific recommendations',
         }
 
-        template = get_template('soil/pdf_report.html')
+        # ===== Use English template =====
+        template = get_template('soil/pdf_report_en.html')
         html = template.render(context)
 
         result = io.BytesIO()
@@ -652,16 +646,16 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
 
         if not pdf.err:
             response = HttpResponse(result.getvalue(), content_type='application/pdf')
-            response['Content-Disposition'] = f'attachment; filename="analysis_{analysis.id}.pdf"'
+            response['Content-Disposition'] = f'attachment; filename="analysis_report_{analysis.id}.pdf"'
+            response['Content-Length'] = result.getbuffer().nbytes
             return response
 
-        return HttpResponse('خطا در تولید PDF', status=500)
+        return HttpResponse('PDF generation failed', status=500)
 
     # ===================== پنل LIMS =====================
 
     @action(detail=False, methods=['post'], url_path='lab-register')
     def lab_register_sample(self, request):
-        """ثبت نمونه خاک از طریق آزمایشگاه (LIMS)"""
         logger.info(f"📥 داده دریافتی lab-register: {request.data}")
 
         serializer = LabSampleInputSerializer(data=request.data)
@@ -750,7 +744,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='lab-samples')
     def lab_list_samples(self, request):
-        """لیست نمونه‌های ثبت‌شده توسط آزمایشگاه"""
         samples = SoilSample.objects.filter(source='LAB').order_by('-sampling_date')
         serializer = SoilSampleSerializer(samples, many=True)
         return Response(serializer.data)
@@ -759,14 +752,12 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='pending-verification')
     def pending_verification(self, request):
-        """لیست نمونه‌های در انتظار تأیید"""
         samples = SoilSample.objects.filter(is_verified=False, rejection_reason='').order_by('-created_at')
         serializer = SoilSampleSerializer(samples, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'], url_path='verification-stats')
     def verification_stats(self, request):
-        """دریافت آمار تأیید نمونه‌ها"""
         total = SoilSample.objects.count()
         pending = SoilSample.objects.filter(is_verified=False, rejection_reason='').count()
         verified = SoilSample.objects.filter(is_verified=True).count()
@@ -781,7 +772,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='details')
     def sample_details(self, request, pk=None):
-        """دریافت جزئیات کامل یک نمونه"""
         sample = get_object_or_404(SoilSample, pk=pk)
         serializer = SoilSampleSerializer(sample)
 
@@ -804,7 +794,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='verify')
     def verify_sample(self, request, pk=None):
-        """تأیید یک نمونه توسط کارشناس"""
         sample = get_object_or_404(SoilSample, pk=pk)
 
         if sample.is_verified:
@@ -829,7 +818,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='reject')
     def reject_sample(self, request, pk=None):
-        """رد یک نمونه توسط کارشناس با ذکر دلیل"""
         sample = get_object_or_404(SoilSample, pk=pk)
 
         if sample.is_verified:
@@ -863,6 +851,9 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['post'], url_path='upload-bulk')
     def upload_bulk_samples(self, request):
         """آپلود انبوه نمونه‌های خاک از طریق فایل Excel"""
+        import csv
+        from openpyxl import load_workbook
+
         if 'file' not in request.FILES:
             return Response(
                 {'error': 'هیچ فایلی ارسال نشده است'},
@@ -878,14 +869,32 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
             )
 
         try:
+            rows = []
+
             if file.name.endswith('.csv'):
-                df = pd.read_csv(file)
+                text = file.read().decode('utf-8')
+                csv_reader = csv.DictReader(io.StringIO(text))
+                rows = list(csv_reader)
             else:
-                df = pd.read_excel(file)
+                workbook = load_workbook(file)
+                sheet = workbook.active
+                headers = [cell.value for cell in sheet[1]]
+                for row in sheet.iter_rows(min_row=2, values_only=True):
+                    row_dict = {}
+                    for i, header in enumerate(headers):
+                        if i < len(row) and row[i] is not None:
+                            row_dict[header] = row[i]
+                    if row_dict:
+                        rows.append(row_dict)
 
-            required_columns = ['sample_code', 'sampling_date', 'ph', 'ec', 'organic_matter', 'texture']
-            missing_columns = [col for col in required_columns if col not in df.columns]
+            if not rows:
+                return Response(
+                    {'error': 'فایل خالی است یا داده‌ای ندارد'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
+            required_columns = ['sample_code', 'ph', 'ec', 'organic_matter']
+            missing_columns = [col for col in required_columns if col not in rows[0]]
             if missing_columns:
                 return Response({
                     'error': f'ستون‌های زیر در فایل وجود ندارند: {", ".join(missing_columns)}',
@@ -908,9 +917,10 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
                 }
             )
 
-            for index, row in df.iterrows():
+            for index, row in enumerate(rows):
                 try:
                     errors = []
+
                     sample_code = str(row.get('sample_code', '')).strip()
                     if not sample_code:
                         errors.append('کد نمونه الزامی است')
@@ -918,28 +928,28 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
                     try:
                         ph = float(row.get('ph', 0))
                         if not (0 <= ph <= 14):
-                            errors.append(f'pH نامعتبر: {ph} (باید بین ۰ تا ۱۴ باشد)')
-                    except (ValueError, TypeError):
+                            errors.append(f'pH نامعتبر: {ph}')
+                    except:
                         errors.append('pH نامعتبر')
                         ph = 7.0
 
                     try:
                         ec = float(row.get('ec', 0))
                         if ec < 0:
-                            errors.append(f'EC نامعتبر: {ec} (باید مثبت باشد)')
-                    except (ValueError, TypeError):
+                            errors.append(f'EC نامعتبر: {ec}')
+                    except:
                         errors.append('EC نامعتبر')
                         ec = 0.5
 
                     try:
                         organic_matter = float(row.get('organic_matter', 0))
                         if organic_matter < 0:
-                            errors.append(f'ماده آلی نامعتبر: {organic_matter} (باید مثبت باشد)')
-                    except (ValueError, TypeError):
+                            errors.append(f'ماده آلی نامعتبر: {organic_matter}')
+                    except:
                         errors.append('ماده آلی نامعتبر')
                         organic_matter = 1.5
 
-                    texture = str(row.get('texture', '')).strip().upper()
+                    texture = str(row.get('texture', 'LOAM')).strip().upper()
                     valid_textures = ['SANDY', 'LOAMY_SAND', 'SANDY_LOAM', 'LOAM',
                                       'SILT_LOAM', 'SILT', 'CLAY_LOAM', 'SILTY_CLAY_LOAM', 'CLAY']
                     if texture not in valid_textures:
@@ -949,25 +959,25 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
                     latitude = 35.0
                     longitude = 51.0
                     try:
-                        if 'latitude' in row and pd.notna(row['latitude']):
+                        if 'latitude' in row and row['latitude']:
                             latitude = float(row['latitude'])
-                        if 'longitude' in row and pd.notna(row['longitude']):
+                        if 'longitude' in row and row['longitude']:
                             longitude = float(row['longitude'])
-                    except (ValueError, TypeError):
+                    except:
                         pass
 
                     depth = 30
                     try:
-                        if 'depth' in row and pd.notna(row['depth']):
+                        if 'depth' in row and row['depth']:
                             depth = float(row['depth'])
-                    except (ValueError, TypeError):
+                    except:
                         pass
 
                     sampling_date = '2024-01-01'
                     try:
-                        if 'sampling_date' in row and pd.notna(row['sampling_date']):
-                            sampling_date = pd.to_datetime(row['sampling_date']).strftime('%Y-%m-%d')
-                    except Exception:
+                        if 'sampling_date' in row and row['sampling_date']:
+                            sampling_date = str(row['sampling_date'])[:10]
+                    except:
                         errors.append('تاریخ نمونه‌برداری نامعتبر')
 
                     if errors:
@@ -1011,19 +1021,19 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
                         ph=ph,
                         ec=ec,
                         organic_matter=organic_matter,
-                        nitrogen=float(row.get('nitrogen', 0)) if pd.notna(row.get('nitrogen')) else None,
-                        phosphorus=float(row.get('phosphorus', 0)) if pd.notna(row.get('phosphorus')) else None,
-                        potassium=float(row.get('potassium', 0)) if pd.notna(row.get('potassium')) else None,
+                        nitrogen=float(row.get('nitrogen', 0)) if row.get('nitrogen') else None,
+                        phosphorus=float(row.get('phosphorus', 0)) if row.get('phosphorus') else None,
+                        potassium=float(row.get('potassium', 0)) if row.get('potassium') else None,
                         texture=texture,
                         latitude=latitude,
                         longitude=longitude,
                         source='LAB',
                         laboratory_name=request.data.get('laboratory_name', 'آزمایشگاه'),
                         is_verified=False,
-                        iron=float(row.get('iron', 0)) if pd.notna(row.get('iron')) else None,
-                        zinc=float(row.get('zinc', 0)) if pd.notna(row.get('zinc')) else None,
-                        manganese=float(row.get('manganese', 0)) if pd.notna(row.get('manganese')) else None,
-                        copper=float(row.get('copper', 0)) if pd.notna(row.get('copper')) else None,
+                        iron=float(row.get('iron', 0)) if row.get('iron') else None,
+                        zinc=float(row.get('zinc', 0)) if row.get('zinc') else None,
+                        manganese=float(row.get('manganese', 0)) if row.get('manganese') else None,
+                        copper=float(row.get('copper', 0)) if row.get('copper') else None,
                     )
 
                     results['success_count'] += 1
@@ -1059,7 +1069,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], url_path='expert-request')
     def create_expert_request(self, request):
-        """ایجاد درخواست جدید برای کارشناس (فقط کشاورز)"""
         if not request.user.is_authenticated:
             return Response({'error': 'لطفاً وارد شوید'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -1086,7 +1095,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='my-requests')
     def my_expert_requests(self, request):
-        """دریافت لیست درخواست‌های کاربر (کشاورز)"""
         if not request.user.is_authenticated:
             return Response({'error': 'لطفاً وارد شوید'}, status=status.HTTP_401_UNAUTHORIZED)
 
@@ -1100,7 +1108,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='expert-requests')
     def expert_requests_list(self, request):
-        """لیست تمام درخواست‌ها برای کارشناسان (فقط Admin و Expert)"""
         if not request.user.is_authenticated:
             return Response({'error': 'دسترسی غیرمجاز'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -1123,7 +1130,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='accept-request')
     def accept_expert_request(self, request, pk=None):
-        """پذیرش درخواست توسط کارشناس"""
         if not request.user.is_authenticated:
             return Response({'error': 'دسترسی غیرمجاز'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -1153,7 +1159,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='reject-request')
     def reject_expert_request(self, request, pk=None):
-        """رد درخواست توسط کارشناس"""
         if not request.user.is_authenticated:
             return Response({'error': 'دسترسی غیرمجاز'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -1187,7 +1192,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'], url_path='complete-request')
     def complete_expert_request(self, request, pk=None):
-        """تکمیل درخواست توسط کارشناس"""
         if not request.user.is_authenticated:
             return Response({'error': 'دسترسی غیرمجاز'}, status=status.HTTP_403_FORBIDDEN)
 
@@ -1218,7 +1222,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='soil-layers')
     def soil_layers(self, request):
-        """دریافت داده‌های خاک برای نمایش روی نقشه (GeoJSON)"""
         layer_type = request.query_params.get('layer', 'ph')
         samples = SoilSample.objects.filter(is_verified=True).select_related('farm')
 
@@ -1290,3 +1293,65 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
             'layer_type': layer_type,
             'count': len(features)
         })
+
+    # ===================== درون‌یابی (API جدید) =====================
+
+    @action(detail=False, methods=['post'], url_path='interpolate')
+    def interpolate_soil(self, request):
+        """
+        درون‌یابی داده‌های خاک برای یک نقطه مشخص
+        """
+        try:
+            lat = request.data.get('latitude')
+            lng = request.data.get('longitude')
+            radius = request.data.get('radius', 100)
+
+            if not lat or not lng:
+                return Response(
+                    {'error': 'مختصات جغرافیایی الزامی است'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # دریافت نمونه‌های تأیید شده
+            samples = SoilSample.objects.filter(is_verified=True)
+            sample_list = []
+
+            for sample in samples:
+                sample_list.append({
+                    'latitude': sample.latitude,
+                    'longitude': sample.longitude,
+                    'ph': sample.ph,
+                    'ec': sample.ec,
+                    'organic_matter': sample.organic_matter,
+                    'nitrogen': sample.nitrogen,
+                    'phosphorus': sample.phosphorus,
+                    'potassium': sample.potassium,
+                })
+
+            # اجرای درون‌یابی
+            result = SoilAnalysisEngine.interpolate_values(sample_list, lat, lng, radius)
+
+            if not result:
+                return Response(
+                    {'error': 'هیچ نمونه‌ای در محدوده مشخص شده یافت نشد'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+
+            # محاسبه تعداد نمونه‌های استفاده شده
+            samples_used = len([s for s in sample_list if
+                               math.sqrt((s['latitude'] - lat)**2 + (s['longitude'] - lng)**2) * 111 <= radius])
+
+            return Response({
+                'success': True,
+                'data': result,
+                'latitude': lat,
+                'longitude': lng,
+                'radius': radius,
+                'samples_used': samples_used
+            })
+
+        except Exception as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )

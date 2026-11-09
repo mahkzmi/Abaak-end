@@ -171,6 +171,14 @@
             background: #f1f5f9;
             color: #0f172a;
         }
+        
+        .health-score {
+            font-weight: 700;
+        }
+        .health-excellent { color: #22c55e; }
+        .health-good { color: #3b82f6; }
+        .health-fair { color: #eab308; }
+        .health-poor { color: #ef4444; }
     </style>
 </head>
 <body>
@@ -304,7 +312,7 @@
             </div>
         </div>
 
-        <!-- ===== تاریخچه تحلیل‌ها ===== -->
+        <!-- ===== تاریخچه تحلیل‌ها (اصلاح‌شده) ===== -->
         <div class="profile-section">
             <h2 class="section-title">📊 تاریخچه تحلیل‌ها</h2>
             <div id="analyses-list">
@@ -539,22 +547,80 @@
         }
 
         // ============================================================
-        // ۵. بارگذاری تاریخچه تحلیل‌ها
+        // ۵. بارگذاری تاریخچه تحلیل‌ها (اصلاح‌شده)
         // ============================================================
         
         async function loadAnalyses() {
+            const container = document.getElementById('analyses-list');
+            
             try {
                 const token = getToken();
-                const response = await fetch(`${API_BASE}/profile/analyses/`, {
-                    headers: getHeaders()
-                });
+                if (!token) {
+                    container.innerHTML = `
+                        <div class="text-center text-yellow-600 py-8">
+                            <i class="bi bi-exclamation-triangle text-2xl"></i>
+                            <p class="mt-2">لطفاً وارد شوید</p>
+                        </div>
+                    `;
+                    return;
+                }
 
-                if (!response.ok) throw new Error('خطا در دریافت تحلیل‌ها');
+                // ===== تلاش برای دریافت تحلیل‌ها از API =====
+                let analysesData = [];
+                let apiSuccess = false;
+                
+                try {
+                    const response = await fetch(`${API_BASE}/profile/analyses/`, {
+                        headers: getHeaders()
+                    });
 
-                const data = await response.json();
-                const container = document.getElementById('analyses-list');
+                    if (response.status === 401) {
+                        redirectToLogin();
+                        return;
+                    }
 
-                if (!data || data.length === 0) {
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && Array.isArray(data) && data.length > 0) {
+                            analysesData = data;
+                            apiSuccess = true;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('API /profile/analyses/ خطا:', e);
+                }
+
+                // ===== اگر API جواب نداد، از لیست نمونه‌های خاک استفاده کن =====
+                if (!apiSuccess || analysesData.length === 0) {
+                    try {
+                        const samplesRes = await fetch(`${API_BASE}/soil-samples/`, {
+                            headers: getHeaders()
+                        });
+                        
+                        if (samplesRes.ok) {
+                            const samples = await samplesRes.json();
+                            if (samples && Array.isArray(samples) && samples.length > 0) {
+                                // تبدیل نمونه‌ها به فرمت تحلیل
+                                analysesData = samples.map(sample => ({
+                                    sample: {
+                                        sample_code: sample.sample_code,
+                                        farm_name: sample.farm?.name || 'مزرعه نامشخص',
+                                        ph: sample.ph,
+                                        ec: sample.ec,
+                                        organic_matter: sample.organic_matter,
+                                        created_at: sample.created_at
+                                    },
+                                    analysis: sample.analysis || null
+                                }));
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('خطا در دریافت نمونه‌ها:', e);
+                    }
+                }
+
+                // ===== اگر باز هم داده‌ای نبود =====
+                if (!analysesData || analysesData.length === 0) {
                     container.innerHTML = `
                         <div class="text-center text-gray-500 py-8">
                             <i class="bi bi-bar-chart text-3xl"></i>
@@ -565,6 +631,7 @@
                     return;
                 }
 
+                // ===== نمایش جدول =====
                 container.innerHTML = `
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm">
@@ -579,30 +646,57 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                ${data.map(item => `
-                                    <tr class="border-b border-gray-100 hover:bg-gray-50">
-                                        <td class="px-4 py-2 font-mono text-xs">${item.sample.sample_code}</td>
-                                        <td class="px-4 py-2">${item.sample.farm_name || '---'}</td>
-                                        <td class="px-4 py-2">${item.sample.ph}</td>
-                                        <td class="px-4 py-2">${item.sample.ec}</td>
-                                        <td class="px-4 py-2">
-                                            ${item.analysis ? `
-                                                <span class="font-bold ${item.analysis.soil_health_index >= 80 ? 'text-green-600' : item.analysis.soil_health_index >= 60 ? 'text-blue-600' : 'text-yellow-600'}">
-                                                    ${item.analysis.soil_health_index}%
-                                                </span>
-                                            ` : '---'}
-                                        </td>
-                                        <td class="px-4 py-2 text-gray-400 text-xs">${new Date(item.sample.created_at).toLocaleDateString('fa-IR')}</td>
-                                    </tr>
-                                `).join('')}
+                                ${analysesData.map(item => {
+                                    const sample = item.sample || {};
+                                    const analysis = item.analysis || {};
+                                    const healthIndex = analysis.soil_health_index || null;
+                                    
+                                    let healthClass = 'health-poor';
+                                    let healthText = '---';
+                                    if (healthIndex !== null) {
+                                        if (healthIndex >= 80) {
+                                            healthClass = 'health-excellent';
+                                            healthText = healthIndex + '%';
+                                        } else if (healthIndex >= 60) {
+                                            healthClass = 'health-good';
+                                            healthText = healthIndex + '%';
+                                        } else if (healthIndex >= 40) {
+                                            healthClass = 'health-fair';
+                                            healthText = healthIndex + '%';
+                                        } else {
+                                            healthClass = 'health-poor';
+                                            healthText = healthIndex + '%';
+                                        }
+                                    }
+                                    
+                                    return `
+                                        <tr class="border-b border-gray-100 hover:bg-gray-50">
+                                            <td class="px-4 py-2 font-mono text-xs">${sample.sample_code || '---'}</td>
+                                            <td class="px-4 py-2">${sample.farm_name || '---'}</td>
+                                            <td class="px-4 py-2">${sample.ph || '---'}</td>
+                                            <td class="px-4 py-2">${sample.ec || '---'}</td>
+                                            <td class="px-4 py-2">
+                                                ${healthIndex !== null ? 
+                                                    `<span class="health-score ${healthClass}">${healthText}</span>` : 
+                                                    '---'}
+                                            </td>
+                                            <td class="px-4 py-2 text-gray-400 text-xs">${sample.created_at ? new Date(sample.created_at).toLocaleDateString('fa-IR') : '---'}</td>
+                                        </tr>
+                                    `;
+                                }).join('')}
                             </tbody>
                         </table>
                     </div>
                 `;
+
             } catch (error) {
                 console.error('Error loading analyses:', error);
-                document.getElementById('analyses-list').innerHTML = `
-                    <div class="text-center text-red-600 py-8">خطا در بارگذاری تاریخچه</div>
+                container.innerHTML = `
+                    <div class="text-center text-red-600 py-8">
+                        <i class="bi bi-exclamation-triangle text-2xl"></i>
+                        <p class="mt-2">خطا در بارگذاری تاریخچه: ${error.message}</p>
+                        <button onclick="loadAnalyses()" class="mt-2 text-green-600 hover:underline">تلاش مجدد</button>
+                    </div>
                 `;
             }
         }

@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="fa">
+<head>
+    <meta charset="UTF-8">
+    <title>گزارش تحلیل خاک - آباک</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        
+        /* ===== تنظیم فونت برای PDF ===== */
+        body {
+            font-family: 'Vazirmatn', 'DejaVuSans', 'Helvetica', 'Arial', sans-serif;
+            font-size: 12px;
+            color: #333;
+            line-height: 1.6;
+            direction: rtl;
+        }
+        
+        .header {
+            text-align: center;
+            border-bottom: 2px solid #0d9488;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: #0d9488;
+            font-size: 24px;
+            margin: 0;
+        }
+        .header .subtitle {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+            padding: 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .section-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #0d9488;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .info-grid {
+            display: table;
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .info-row {
+            display: table-row;
+        }
+        .info-label {
+            display: table-cell;
+            padding: 4px 0;
+            color: #6b7280;
+            font-weight: 500;
+            width: 40%;
+        }
+        .info-value {
+            display: table-cell;
+            padding: 4px 0;
+            font-weight: 500;
+        }
+        
+        .health-box {
+            text-align: center;
+            padding: 15px;
+            background: #f0fdf4;
+            border-radius: 8px;
+            border: 1px solid #86efac;
+        }
+        .health-score {
+            font-size: 36px;
+            font-weight: bold;
+            color: #0d9488;
+        }
+        .health-level {
+            font-size: 18px;
+            font-weight: bold;
+            padding: 4px 16px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        .health-excellent { background: #d1fae5; color: #065f46; }
+        .health-good { background: #dbeafe; color: #1e40af; }
+        .health-fair { background: #fef3c7; color: #92400e; }
+        .health-poor { background: #fee2e2; color: #991b1b; }
+        
+        .crop-card {
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            margin-bottom: 8px;
+        }
+        .crop-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: #0d9488;
+        }
+        .crop-score {
+            float: left;
+            font-weight: bold;
+            color: #0d9488;
+        }
+        
+        .fertilizer-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+        .fertilizer-item:last-child {
+            border-bottom: none;
+        }
+        
+        .footer {
+            text-align: center;
+            font-size: 10px;
+            color: #999;
+            border-top: 1px solid #e5e7eb;
+            padding-top: 15px;
+            margin-top: 20px;
+        }
+        
+        .summary-text {
+            background: #f9fafb;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== هدر ===== -->
+    <div class="header">
+        <h1>🌱 آباک</h1>
+        <div class="subtitle">سامانه هوشمند تحلیل خاک و توصیه کشاورزی</div>
+        <div style="font-size: 11px; color: #999; margin-top: 4px;">
+            تاریخ: {{ analysis_date }}
+        </div>
+    </div>
+
+    <!-- ===== اطلاعات مزرعه ===== -->
+    <div class="section">
+        <div class="section-title">📋 اطلاعات مزرعه</div>
+        <div class="info-grid">
+            <div class="info-row">
+                <span class="info-label">نام مزرعه</span>
+                <span class="info-value">{{ farm.name }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">کشاورز</span>
+                <span class="info-value">{{ farmer.get_full_name|default:farmer.user.username }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">مساحت</span>
+                <span class="info-value">{{ farm.area|floatformat:2 }} هکتار</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">استان</span>
+                <span class="info-value">{{ farm.province.name|default:'نامشخص' }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">کد نمونه</span>
+                <span class="info-value">{{ sample.sample_code }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">تاریخ نمونه‌برداری</span>
+                <span class="info-value">{{ sample.sampling_date|date:'Y/m/d' }}</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== نتایج تحلیل ===== -->
+    <div class="section">
+        <div class="section-title">📊 نتایج تحلیل خاک</div>
+        
+        <div class="health-box">
+            <div style="font-size:14px; color:#666;">شاخص سلامت خاک (DSHI)</div>
+            <div class="health-score">{{ soil_health_index }}%</div>
+            <div>
+                <span class="health-level health-{{ analysis.soil_health_level|lower }}">
+                    {{ analysis.get_health_level_display }}
+                </span>
+            </div>
+        </div>
+        
+        <div style="margin-top:12px;">
+            <div style="font-weight:bold; color:#374151;">🧪 پارامترهای خاک</div>
+            <div class="info-grid">
+                <div class="info-row">
+                    <span class="info-label">pH</span>
+                    <span class="info-value">{{ sample.ph }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">EC</span>
+                    <span class="info-value">{{ sample.ec }} dS/m</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">ماده آلی</span>
+                    <span class="info-value">{{ sample.organic_matter }}%</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">بافت خاک</span>
+                    <span class="info-value">{{ sample.get_texture_display }}</span>
+                </div>
+                {% if sample.nitrogen %}
+                <div class="info-row">
+                    <span class="info-label">نیتروژن</span>
+                    <span class="info-value">{{ sample.nitrogen }} ppm</span>
+                </div>
+                {% endif %}
+                {% if sample.phosphorus %}
+                <div class="info-row">
+                    <span class="info-label">فسفر</span>
+                    <span class="info-value">{{ sample.phosphorus }} ppm</span>
+                </div>
+                {% endif %}
+                {% if sample.potassium %}
+                <div class="info-row">
+                    <span class="info-label">پتاسیم</span>
+                    <span class="info-value">{{ sample.potassium }} ppm</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== محصولات پیشنهادی ===== -->
+    <div class="section">
+        <div class="section-title">💰 محصولات پیشنهادی</div>
+        
+        {% if recommended_crops %}
+            {% for crop in recommended_crops %}
+            <div class="crop-card">
+                <div>
+                    <span class="crop-name">{{ crop.name }}</span>
+                    <span class="crop-score">{{ crop.score }}%</span>
+                </div>
+                <div style="font-size:12px; color:#666;">
+                    سود پیش‌بینی: {{ crop.profit|floatformat:0|default:0|floatformat:"g" }} تومان/هکتار
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="color:#999;">هیچ محصولی پیشنهاد نشده است</div>
+        {% endif %}
+    </div>
+
+    <!-- ===== توصیه‌های کودی ===== -->
+    <div class="section">
+        <div class="section-title">🧪 توصیه‌های کودی</div>
+        
+        {% if fertilizer_recommendations %}
+            {% if fertilizer_recommendations.main %}
+                {% if fertilizer_recommendations.main|length > 0 %}
+                    {% for fert in fertilizer_recommendations.main %}
+                    <div class="fertilizer-item">
+                        <span>{{ fert.fertilizer_name }}</span>
+                        <span><strong>{{ fert.amount }}</strong> {{ fert.unit }}</span>
+                    </div>
+                    <div style="font-size:11px; color:#666; padding-right:12px; margin-bottom:4px;">
+                        زمان: {{ fert.timing }}
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="color:#999;">{{ fertilizer_recommendations.main }}</div>
+                {% endif %}
+            {% else %}
+                <div style="color:#999;">توصیه کودی ثبت نشده است</div>
+            {% endif %}
+        {% else %}
+            <div style="color:#999;">توصیه کودی ثبت نشده است</div>
+        {% endif %}
+    </div>
+
+    <!-- ===== خلاصه مدیریتی ===== -->
+    {% if management_tips %}
+    <div class="section">
+        <div class="section-title">📝 خلاصه مدیریتی</div>
+        <div class="summary-text">{{ management_tips }}</div>
+    </div>
+    {% endif %}
+
+    <!-- ===== فوتر ===== -->
+    <div class="footer">
+        <p>این گزارش توسط سامانه هوشمند آباک تولید شده است.</p>
+        <p>تولید شده در: {{ analysis_date }}</p>
+    </div>
+
+</body>
+</html>

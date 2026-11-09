@@ -413,7 +413,7 @@
         }
 
         // ============================================================
-        // ۵. بارگذاری فعالیت‌های اخیر
+        // ۵. بارگذاری فعالیت‌های اخیر (نسخه اصلاح‌شده با پشتیبان)
         // ============================================================
         
         async function loadActivities() {
@@ -421,60 +421,103 @@
                 const token = getToken();
                 const container = document.getElementById('recent-activities');
 
-                // دریافت درخواست‌های کارشناس
-                const [requestsRes, analysesRes] = await Promise.all([
-                    fetch(`${API_BASE}/analyses/my-requests/`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    }),
-                    fetch(`${API_BASE}/profile/analyses/`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    })
-                ]);
+                if (!token) {
+                    container.innerHTML = `
+                        <div class="text-center text-gray-500 py-4">
+                            <i class="bi bi-exclamation-triangle text-2xl"></i>
+                            <p class="mt-2">لطفاً وارد شوید</p>
+                        </div>
+                    `;
+                    return;
+                }
 
                 let activities = [];
 
-                // پردازش درخواست‌ها
-                if (requestsRes.ok) {
-                    const requests = await requestsRes.json();
-                    if (requests && requests.length > 0) {
-                        const requestActivities = requests.map(req => ({
-                            type: 'request',
-                            icon: 'bi-person-badge',
-                            color: 'text-blue-600',
-                            bg: 'bg-blue-100',
-                            title: req.title || 'درخواست کارشناس',
-                            farm: req.farm_name || 'مزرعه نامشخص',
-                            status: req.status_display || req.status,
-                            time: new Date(req.created_at).toLocaleDateString('fa-IR'),
-                            timestamp: new Date(req.created_at).getTime()
-                        }));
-                        activities = [...activities, ...requestActivities];
+                // ===== ۱. دریافت تحلیل‌های اخیر =====
+                try {
+                    const analysesRes = await fetch(`${API_BASE}/profile/analyses/`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (analysesRes.ok) {
+                        const data = await analysesRes.json();
+                        if (data && data.length > 0) {
+                            const analysisActivities = data.slice(0, 5).map(item => ({
+                                type: 'analysis',
+                                icon: 'bi-graph-up',
+                                color: 'text-green-600',
+                                bg: 'bg-green-100',
+                                title: `تحلیل خاک`,
+                                farm: item.sample?.farm_name || 'مزرعه نامشخص',
+                                status: item.analysis ? `${item.analysis.soil_health_index}%` : 'انجام شده',
+                                time: item.sample?.created_at ? new Date(item.sample.created_at).toLocaleDateString('fa-IR') : 'اخیراً',
+                                timestamp: item.sample?.created_at ? new Date(item.sample.created_at).getTime() : 0
+                            }));
+                            activities = [...activities, ...analysisActivities];
+                        }
+                    }
+                } catch (e) {
+                    console.warn('خطا در دریافت تحلیل‌ها:', e);
+                }
+
+                // ===== ۲. دریافت درخواست‌های کارشناس =====
+                try {
+                    const requestsRes = await fetch(`${API_BASE}/analyses/my-requests/`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    
+                    if (requestsRes.ok) {
+                        const data = await requestsRes.json();
+                        if (data && data.length > 0) {
+                            const requestActivities = data.map(req => ({
+                                type: 'request',
+                                icon: 'bi-person-badge',
+                                color: 'text-blue-600',
+                                bg: 'bg-blue-100',
+                                title: req.title || 'درخواست کارشناس',
+                                farm: req.farm_name || 'مزرعه نامشخص',
+                                status: req.status_display || req.status,
+                                time: req.created_at ? new Date(req.created_at).toLocaleDateString('fa-IR') : 'اخیراً',
+                                timestamp: req.created_at ? new Date(req.created_at).getTime() : 0
+                            }));
+                            activities = [...activities, ...requestActivities];
+                        }
+                    }
+                } catch (e) {
+                    console.warn('خطا در دریافت درخواست‌ها:', e);
+                }
+
+                // ===== ۳. اگر هیچ فعالیتی نبود، از آخرین تحلیل استفاده کن =====
+                if (activities.length === 0) {
+                    // تلاش برای دریافت آخرین تحلیل از data موجود
+                    try {
+                        const statsRes = await fetch(`${API_BASE}/dashboard/stats/`, {
+                            headers: { 'Authorization': `Bearer ${token}` }
+                        });
+                        if (statsRes.ok) {
+                            const stats = await statsRes.json();
+                            if (stats.last_analysis) {
+                                const a = stats.last_analysis;
+                                activities.push({
+                                    type: 'analysis',
+                                    icon: 'bi-graph-up',
+                                    color: 'text-green-600',
+                                    bg: 'bg-green-100',
+                                    title: `تحلیل ${a.farm_name || 'جدید'}`,
+                                    farm: a.farm_name || 'مزرعه نامشخص',
+                                    status: `${a.soil_health_index || 0}%`,
+                                    time: a.created_at ? new Date(a.created_at).toLocaleDateString('fa-IR') : 'امروز',
+                                    timestamp: a.created_at ? new Date(a.created_at).getTime() : Date.now()
+                                });
+                            }
+                        }
+                    } catch (e) {
+                        console.warn('خطا در دریافت آخرین تحلیل:', e);
                     }
                 }
 
-                // پردازش تحلیل‌ها
-                if (analysesRes.ok) {
-                    const analyses = await analysesRes.json();
-                    if (analyses && analyses.length > 0) {
-                        const analysisActivities = analyses.slice(0, 5).map(item => ({
-                            type: 'analysis',
-                            icon: 'bi-graph-up',
-                            color: 'text-green-600',
-                            bg: 'bg-green-100',
-                            title: `تحلیل خاک ${item.sample.farm_name || ''}`,
-                            farm: item.sample.farm_name || 'مزرعه نامشخص',
-                            status: item.analysis ? `${item.analysis.soil_health_index}%` : 'انجام شده',
-                            time: new Date(item.sample.created_at).toLocaleDateString('fa-IR'),
-                            timestamp: new Date(item.sample.created_at).getTime()
-                        }));
-                        activities = [...activities, ...analysisActivities];
-                    }
-                }
-
-                // مرتب‌سازی بر اساس زمان (جدیدترین اول)
+                // ===== ۴. مرتب‌سازی و نمایش =====
                 activities.sort((a, b) => b.timestamp - a.timestamp);
-
-                // فقط ۵ مورد آخر
                 const recent = activities.slice(0, 5);
 
                 if (recent.length === 0) {

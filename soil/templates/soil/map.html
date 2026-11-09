@@ -16,291 +16,610 @@
     <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap" rel="stylesheet">
     
     <style>
-        * {
-            font-family: 'Vazirmatn', 'Tahoma', sans-serif;
+        * { 
+            font-family: 'Vazirmatn', 'Tahoma', sans-serif; 
+            box-sizing: border-box;
         }
         
-        #map {
-            height: 600px;
-            border-radius: 12px;
-            z-index: 1;
+        /* ===== ریست ===== */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            background: #f1f5f9;
+        }
+        
+        /* ===== هدر اصلی (از include می‌آید) ===== */
+        .main-header {
+            flex-shrink: 0;
+            z-index: 20;
             position: relative;
         }
         
+        /* ===== لایه‌بندی اصلی ===== */
+        .app-layout {
+            display: flex;
+            height: calc(100vh - 64px); /* 64px برای هدر */
+            gap: 0;
+            background: #f1f5f9;
+        }
+        
+        /* ===== پنل سمت چپ ===== */
+        .left-panel {
+            width: 380px;
+            min-width: 380px;
+            background: white;
+            border-left: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        /* ===== نوار بالای پنل چپ ===== */
+        .panel-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            flex-shrink: 0;
+            background: white;
+        }
+        .panel-header h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 4px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .panel-header p {
+            font-size: 13px;
+            color: #64748b;
+            margin: 0;
+        }
+        
+        /* ===== لایه‌های خاک در پنل چپ ===== */
+        .layers-section {
+            padding: 10px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            flex-shrink: 0;
+            background: #fafcff;
+        }
+        .layers-section .label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #64748b;
+            display: block;
+            margin-bottom: 6px;
+        }
+        .layers-section .layer-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .layers-section .layer-btn {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            cursor: pointer;
+            font-family: inherit;
+            transition: 0.2s;
+        }
+        .layers-section .layer-btn:hover { border-color: #0d9488; background: #f0fdfa; }
+        .layers-section .layer-btn.active { border-color: #0d9488; background: #0d9488; color: white; }
+        .layers-section .layer-btn.danger { color: #ef4444; border-color: #fca5a5; }
+        .layers-section .layer-btn.danger:hover { background: #fef2f2; }
+        #layer-legend {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 6px;
+            display: none;
+        }
+        #layer-legend.show { display: block; }
+        
+        /* ===== دکمه‌های اقدام ===== */
+        .action-buttons {
+            padding: 10px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            flex-shrink: 0;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            background: white;
+        }
+        .action-buttons .btn {
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            flex: 1;
+            justify-content: center;
+            min-width: 80px;
+        }
+        .action-buttons .btn-primary {
+            background: #0d9488;
+            color: white;
+        }
+        .action-buttons .btn-primary:hover { background: #0f766e; }
+        .action-buttons .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .action-buttons .btn-secondary {
+            background: #f1f5f9;
+            color: #334155;
+        }
+        .action-buttons .btn-secondary:hover { background: #e2e8f0; }
+        .action-buttons .btn-outline {
+            background: transparent;
+            color: #0d9488;
+            border: 1px solid #0d9488;
+        }
+        .action-buttons .btn-outline:hover { background: #f0fdfa; }
+        
+        /* ===== پنل نتایج در سمت چپ ===== */
+        .result-panel {
+            flex: 1;
+            overflow-y: auto;
+            padding: 12px 16px;
+            background: #fafcff;
+            display: none;
+        }
+        .result-panel.show { display: block; }
+        
+        .result-panel .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .result-panel .result-header h3 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0;
+        }
+        .result-panel .result-header .close {
+            background: none;
+            border: none;
+            font-size: 18px;
+            color: #94a3b8;
+            cursor: pointer;
+        }
+        .result-panel .result-header .close:hover { color: #475569; }
+        
+        .result-panel .health-card {
+            background: white;
+            border-radius: 10px;
+            padding: 12px 14px;
+            border: 1px solid #e2e8f0;
+            margin-bottom: 10px;
+        }
+        .result-panel .health-card .top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .result-panel .health-card .number {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .result-panel .health-card .badge {
+            padding: 2px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        .result-panel .health-card .badge.excellent { background: #d1fae5; color: #065f46; }
+        .result-panel .health-card .badge.good { background: #dbeafe; color: #1e40af; }
+        .result-panel .health-card .badge.fair { background: #fef3c7; color: #92400e; }
+        .result-panel .health-card .badge.poor { background: #fee2e2; color: #991b1b; }
+        .result-panel .health-card .summary {
+            font-size: 13px;
+            color: #475569;
+            margin: 6px 0 0 0;
+        }
+        
+        .result-panel .source-badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #dbeafe;
+            color: #1e40af;
+            margin-bottom: 8px;
+        }
+        
+        .result-panel .crop-item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 10px 12px;
+            margin-bottom: 8px;
+        }
+        .result-panel .crop-item .name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0d9488;
+        }
+        .result-panel .crop-item .detail-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            padding: 2px 0;
+        }
+        .result-panel .crop-item .detail-row .label { color: #64748b; }
+        .result-panel .crop-item .detail-row .value { font-weight: 600; }
+        
+        .result-panel .fertilizer-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            padding: 4px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .result-panel .fertilizer-item:last-child { border-bottom: none; }
+        
+        .result-panel .climate-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 8px;
+        }
+        .result-panel .climate-grid .item {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 6px 8px;
+            text-align: center;
+        }
+        .result-panel .climate-grid .item .val {
+            font-size: 15px;
+            font-weight: 700;
+            color: #0369a1;
+        }
+        .result-panel .climate-grid .item .lbl {
+            font-size: 10px;
+            color: #6b7280;
+        }
+        
+        .result-panel .btn-pdf {
+            background: #dc2626;
+            color: white;
+            padding: 6px 16px;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            width: 100%;
+            margin-top: 8px;
+        }
+        .result-panel .btn-pdf:hover { background: #b91c1c; }
+        
+        .result-panel .empty-state {
+            text-align: center;
+            color: #94a3b8;
+            padding: 30px 0;
+        }
+        .result-panel .empty-state i {
+            font-size: 36px;
+            display: block;
+            margin-bottom: 8px;
+        }
+        
+        /* ===== نقشه (سمت راست) ===== */
+        .map-wrapper {
+            flex: 1;
+            position: relative;
+            background: #e8ecf1;
+            min-height: 0;
+            height: 100%;
+        }
+        #map {
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        /* ===== راهنمای رسم روی نقشه ===== */
+        .drawing-hint {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(13, 148, 136, 0.92);
+            color: white;
+            padding: 6px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            z-index: 1000;
+            display: none;
+            text-align: center;
+            backdrop-filter: blur(4px);
+            white-space: nowrap;
+        }
+        .drawing-hint.show { display: block; }
+        .drawing-hint strong { color: #fcd34d; }
+        
+        /* ===== مودال ===== */
         .modal-overlay {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            inset: 0;
             background: rgba(0,0,0,0.5);
             z-index: 10000;
             justify-content: center;
             align-items: center;
+            padding: 16px;
         }
         .modal-overlay.active { display: flex; }
         .modal-box {
             background: white;
-            padding: 2rem;
-            border-radius: 12px;
-            max-width: 450px;
-            width: 90%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            z-index: 10001;
+            padding: 24px;
+            border-radius: 16px;
+            max-width: 420px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.2);
         }
-        
-        .result-section {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            margin-top: 20px;
-            position: relative;
-            z-index: 2;
+        .modal-box h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+            margin: 0 0 4px 0;
         }
-        
-        .health-badge {
-            display: inline-block;
-            padding: 4px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 14px;
+        .modal-box .sub {
+            color: #64748b;
+            font-size: 13px;
+            margin-bottom: 14px;
         }
-        .health-excellent { background: #d1fae5; color: #065f46; }
-        .health-good { background: #dbeafe; color: #1e40af; }
-        .health-fair { background: #fef3c7; color: #92400e; }
-        .health-poor { background: #fee2e2; color: #991b1b; }
-        
-        .climate-card {
-            background: #f0f9ff;
-            border: 1px solid #bae6fd;
+        .modal-box label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #334155;
+            margin-bottom: 3px;
+        }
+        .modal-box input, .modal-box select {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid #e2e8f0;
             border-radius: 8px;
-            padding: 12px;
+            font-size: 13px;
+            font-family: inherit;
+            transition: 0.2s;
+        }
+        .modal-box input:focus, .modal-box select:focus {
+            outline: none;
+            border-color: #0d9488;
+            box-shadow: 0 0 0 3px rgba(13,148,136,0.1);
+        }
+        .modal-box .btn-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+        }
+        .modal-box .btn-row .btn {
+            flex: 1;
+            padding: 8px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
             text-align: center;
         }
-        .climate-value {
-            font-size: 20px;
-            font-weight: 700;
-            color: #0369a1;
-        }
-        .climate-label {
-            font-size: 12px;
-            color: #6b7280;
-        }
-        
-        .fertilizer-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 0;
-            border-bottom: 1px solid #f3f4f6;
-        }
-        .fertilizer-item:last-child {
-            border-bottom: none;
-        }
-        
-        select {
-            appearance: auto;
-        }
-        
-        .btn-primary {
-            background: #0d9488;
-            color: white;
-            padding: 8px 20px;
-            border-radius: 8px;
-            transition: all 0.2s;
-            font-size: 14px;
-            border: none;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            text-decoration: none;
-        }
-        .btn-primary:hover {
-            background: #0f766e;
-        }
-        .btn-secondary {
-            background: #e5e7eb;
-            color: #374151;
-            padding: 8px 20px;
-            border-radius: 8px;
-            transition: all 0.2s;
-            font-size: 14px;
-            border: none;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            text-decoration: none;
-        }
-        .btn-secondary:hover {
-            background: #d1d5db;
-        }
-        
-        /* استایل برای دکمه‌های لایه */
-        .layer-btn {
-            transition: all 0.2s ease;
-            cursor: pointer;
-        }
-        .layer-btn.active {
-            ring: 2px solid #22c55e;
-            ring-offset: 2px;
-        }
-        
-        /* لودینگ */
-        .loading-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255,255,255,0.7);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            border-radius: 12px;
-        }
-        .loading-overlay.hidden {
+        .modal-box .btn-row .btn-primary { background: #0d9488; color: white; }
+        .modal-box .btn-row .btn-primary:hover { background: #0f766e; }
+        .modal-box .btn-row .btn-secondary { background: #e2e8f0; color: #334155; }
+        .modal-box .btn-row .btn-secondary:hover { background: #cbd5e1; }
+        .modal-box .error {
+            color: #ef4444;
+            font-size: 13px;
+            margin-top: 6px;
             display: none;
+        }
+        .modal-box .error.show { display: block; }
+        
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        /* ===== اسکرول‌بار پنل نتایج ===== */
+        .result-panel::-webkit-scrollbar {
+            width: 4px;
+        }
+        .result-panel::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .result-panel::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        
+        /* ===== Responsive ===== */
+        @media (max-width: 1024px) {
+            .left-panel {
+                width: 320px;
+                min-width: 320px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .app-layout {
+                flex-direction: column;
+                height: calc(100vh - 56px);
+            }
+            .left-panel {
+                width: 100%;
+                min-width: unset;
+                height: 45%;
+                border-left: none;
+                border-bottom: 1px solid #e2e8f0;
+            }
+            .map-wrapper {
+                height: 55%;
+            }
+            .panel-header h2 { font-size: 15px; }
+            .action-buttons .btn { font-size: 12px; padding: 4px 10px; }
+            .result-panel .health-card .number { font-size: 22px; }
+        }
+        
+        @media (max-width: 480px) {
+            .left-panel { height: 40%; }
+            .map-wrapper { height: 60%; }
+            .panel-header { padding: 8px 12px; }
+            .panel-header h2 { font-size: 14px; }
+            .layers-section { padding: 6px 12px; }
+            .layers-section .layer-btn { font-size: 11px; padding: 2px 8px; }
+            .action-buttons { padding: 6px 12px; gap: 4px; }
+            .action-buttons .btn { font-size: 11px; padding: 4px 8px; min-width: 60px; }
+            .result-panel { padding: 8px 12px; }
+            .modal-box { padding: 16px; }
         }
     </style>
 </head>
 <body>
 
     <!-- ============================================================ -->
-    <!-- هدر یکپارچه با منطق نقش                                       -->
+    <!-- هدر یکپارچه (از include)                                     -->
     <!-- ============================================================ -->
-    {% include 'includes/header.html' %}
+    <div class="main-header">
+        {% include 'includes/header.html' %}
+    </div>
 
     <!-- ============================================================ -->
-    <!-- محتوای اصلی                                                   -->
+    <!-- لایه‌بندی اصلی: چپ = پنل کنترل | راست = نقشه                -->
     <!-- ============================================================ -->
-    <div class="container mx-auto px-4 py-8">
+    <div class="app-layout">
 
-        <!-- ===== هدر صفحه ===== -->
-        <div class="flex flex-wrap justify-between items-center gap-4 mb-4">
-            <div>
-                <h1 class="text-2xl font-bold text-green-700">🗺️ نقشه تعاملی</h1>
-                <p class="text-gray-600 text-sm" id="map-subtitle">روی نقشه کلیک کنید و محدوده مزرعه را رسم کنید</p>
+        <!-- ===== پنل سمت چپ ===== -->
+        <div class="left-panel">
+
+            <!-- ===== هدر پنل ===== -->
+            <div class="panel-header">
+                <h2>
+                    <i class="bi bi-map text-green-700"></i>
+                    نقشه تعاملی
+                </h2>
+                <p id="map-subtitle">برای تحلیل، یک پلی‌گون رسم کنید</p>
             </div>
-            <div class="flex flex-wrap gap-2">
-                <a href="/farms/" class="btn-secondary text-sm">
-                    <i class="bi bi-arrow-right ml-1"></i> بازگشت به مزارع
+
+            <!-- ===== دکمه‌های اقدام ===== -->
+            <div class="action-buttons">
+                <button id="get-analysis" class="btn btn-primary" disabled>
+                    <i class="bi bi-graph-up"></i> تحلیل خاک
+                </button>
+                <a href="/farms/" class="btn btn-secondary">
+                    <i class="bi bi-tree"></i> مزارع
                 </a>
-                <a href="/dashboard/" class="btn-secondary text-sm">
-                    <i class="bi bi-speedometer2 ml-1"></i> داشبورد
+                <a href="/dashboard/" class="btn btn-secondary">
+                    <i class="bi bi-speedometer2"></i> داشبورد
                 </a>
             </div>
+
+            <!-- ===== لایه‌های خاک ===== -->
+            <div class="layers-section">
+                <span class="label">🗺️ لایه‌های خاک</span>
+                <div class="layer-group">
+                    <button class="layer-btn" data-layer="ph">🌡️ pH</button>
+                    <button class="layer-btn" data-layer="organic_matter">🌿 ماده آلی</button>
+                    <button class="layer-btn" data-layer="texture">🧱 بافت</button>
+                    <button class="layer-btn danger" id="clear-layers">✕ پاک کردن</button>
+                </div>
+                <div id="layer-legend">راهنمای لایه</div>
+            </div>
+
+            <!-- ===== پنل نتایج ===== -->
+            <div id="result-panel" class="result-panel">
+                <div class="result-header">
+                    <h3>📊 نتایج تحلیل</h3>
+                    <button class="close" id="close-result">✕</button>
+                </div>
+                <div id="result-content">
+                    <div class="empty-state">
+                        <i class="bi bi-inbox"></i>
+                        <p>هنوز تحلیلی انجام نشده است</p>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
-        <!-- ===== نقشه ===== -->
-        <div class="bg-white p-4 rounded-xl shadow-lg relative">
+        <!-- ===== نقشه (سمت راست) ===== -->
+        <div class="map-wrapper">
             <div id="map"></div>
-            <div id="loading-overlay" class="loading-overlay hidden">
-                <div class="text-center">
-                    <i class="bi bi-arrow-repeat text-4xl text-green-600 animate-spin"></i>
-                    <p class="mt-2 text-gray-600">در حال بارگذاری مزرعه...</p>
-                </div>
+            <div id="drawing-hint" class="drawing-hint">
+                <i class="bi bi-hand-index-thumb"></i>
+                برای تکمیل رسم، روی <strong>نقطه شروع</strong> کلیک کنید
             </div>
         </div>
 
-        <!-- ===== کنترل لایه‌های خاک ===== -->
-        <div class="bg-white p-4 rounded-lg shadow-lg mt-4">
-            <h3 class="font-bold text-gray-800 mb-3">🗺️ لایه‌های خاک</h3>
-            <div class="flex flex-wrap gap-2">
-                <button class="layer-btn bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition text-sm" data-layer="ph">
-                    🌡️ pH
-                </button>
-                <button class="layer-btn bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition text-sm" data-layer="organic_matter">
-                    🌿 ماده آلی
-                </button>
-                <button class="layer-btn bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition text-sm" data-layer="texture">
-                    🧱 بافت خاک
-                </button>
-                <button id="clear-layers" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition text-sm">
-                    <i class="bi bi-x-circle ml-1"></i> پاک کردن
-                </button>
-            </div>
-            <div id="layer-legend" class="mt-3 text-sm text-gray-600 hidden">
-                <span id="legend-text">راهنمای لایه</span>
-            </div>
-        </div>
+    </div>
 
-        <!-- ===== مودال ثبت مزرعه ===== -->
-        <div id="farm-modal" class="modal-overlay">
-            <div class="modal-box">
-                <h2 class="text-xl font-bold text-gray-800 mb-4">ثبت مزرعه جدید</h2>
-                <p class="text-sm text-gray-600 mb-4">مساحت: <span id="modal-area" class="font-bold text-green-700">0</span> هکتار</p>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-medium mb-1">نام مزرعه *</label>
-                    <input type="text" id="farm-name-input" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="مثلاً: باغ پسته شمالی">
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-medium mb-1">استان *</label>
-                    <select id="province-select" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent">
-                        <option value="تهران">تهران</option>
-                        <option value="اصفهان">اصفهان</option>
-                        <option value="فارس">فارس</option>
-                        <option value="خوزستان">خوزستان</option>
-                        <option value="گیلان">گیلان</option>
-                        <option value="مازندران">مازندران</option>
-                        <option value="خراسان رضوی">خراسان رضوی</option>
-                        <option value="آذربایجان شرقی">آذربایجان شرقی</option>
-                        <option value="آذربایجان غربی">آذربایجان غربی</option>
-                        <option value="کرمان">کرمان</option>
-                        <option value="سیستان و بلوچستان">سیستان و بلوچستان</option>
-                        <option value="همدان">همدان</option>
-                        <option value="مرکزی">مرکزی</option>
-                        <option value="لرستان">لرستان</option>
-                        <option value="زنجان">زنجان</option>
-                        <option value="سمنان">سمنان</option>
-                        <option value="یزد">یزد</option>
-                        <option value="هرمزگان">هرمزگان</option>
-                        <option value="بوشهر">بوشهر</option>
-                        <option value="چهارمحال و بختیاری">چهارمحال و بختیاری</option>
-                        <option value="کهگیلویه و بویراحمد">کهگیلویه و بویراحمد</option>
-                        <option value="اردبیل">اردبیل</option>
-                        <option value="ایلام">ایلام</option>
-                        <option value="کردستان">کردستان</option>
-                        <option value="کرمانشاه">کرمانشاه</option>
-                        <option value="گلستان">گلستان</option>
-                        <option value="قزوین">قزوین</option>
-                        <option value="قم">قم</option>
-                        <option value="البرز">البرز</option>
-                    </select>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700 text-sm font-medium mb-1">آدرس (اختیاری)</label>
-                    <input type="text" id="farm-address-input" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 focus:border-transparent" placeholder="آدرس مزرعه">
-                </div>
-                <div class="flex gap-3">
-                    <button id="save-farm-btn" class="flex-1 btn-primary">
-                        <i class="bi bi-check-circle ml-1"></i> ثبت مزرعه
-                    </button>
-                    <button id="cancel-farm-btn" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition">
-                        انصراف
-                    </button>
-                </div>
-                <div id="farm-error" class="text-red-600 text-sm mt-2 hidden"></div>
+    <!-- ============================================================ -->
+    <!-- مودال ثبت مزرعه                                               -->
+    <!-- ============================================================ -->
+    <div id="farm-modal" class="modal-overlay">
+        <div class="modal-box">
+            <h2>🌾 ثبت مزرعه جدید</h2>
+            <div class="sub">مساحت: <span id="modal-area" class="font-bold text-green-700">0</span> هکتار</div>
+            
+            <div style="margin-bottom:10px;">
+                <label>نام مزرعه *</label>
+                <input type="text" id="farm-name-input" placeholder="مثلاً: باغ پسته شمالی">
             </div>
-        </div>
-
-        <!-- ===== پنل نتایج تحلیل ===== -->
-        <div id="result-panel" class="hidden">
-            <div class="result-section">
-                <div class="flex items-center justify-between mb-4">
-                    <h2 class="text-xl font-bold text-gray-800">📊 نتایج تحلیل</h2>
-                    <button id="close-result" class="text-gray-400 hover:text-gray-600">
-                        <i class="bi bi-x-lg"></i>
-                    </button>
-                </div>
-                <div id="result-content"></div>
+            <div style="margin-bottom:10px;">
+                <label>استان *</label>
+                <select id="province-select">
+                    <option value="تهران">تهران</option><option value="اصفهان">اصفهان</option>
+                    <option value="فارس">فارس</option><option value="خوزستان">خوزستان</option>
+                    <option value="گیلان">گیلان</option><option value="مازندران">مازندران</option>
+                    <option value="خراسان رضوی">خراسان رضوی</option><option value="آذربایجان شرقی">آذربایجان شرقی</option>
+                    <option value="آذربایجان غربی">آذربایجان غربی</option><option value="کرمان">کرمان</option>
+                    <option value="سیستان و بلوچستان">سیستان و بلوچستان</option><option value="همدان">همدان</option>
+                    <option value="مرکزی">مرکزی</option><option value="لرستان">لرستان</option>
+                    <option value="زنجان">زنجان</option><option value="سمنان">سمنان</option>
+                    <option value="یزد">یزد</option><option value="هرمزگان">هرمزگان</option>
+                    <option value="بوشهر">بوشهر</option><option value="چهارمحال و بختیاری">چهارمحال و بختیاری</option>
+                    <option value="کهگیلویه و بویراحمد">کهگیلویه و بویراحمد</option><option value="اردبیل">اردبیل</option>
+                    <option value="ایلام">ایلام</option><option value="کردستان">کردستان</option>
+                    <option value="کرمانشاه">کرمانشاه</option><option value="گلستان">گلستان</option>
+                    <option value="قزوین">قزوین</option><option value="قم">قم</option>
+                    <option value="البرز">البرز</option>
+                </select>
             </div>
+            <div style="margin-bottom:10px;">
+                <label>آدرس (اختیاری)</label>
+                <input type="text" id="farm-address-input" placeholder="آدرس مزرعه">
+            </div>
+            
+            <div class="btn-row">
+                <button id="save-farm-btn" class="btn btn-primary">ثبت مزرعه</button>
+                <button id="cancel-farm-btn" class="btn btn-secondary">انصراف</button>
+            </div>
+            <div id="farm-error" class="error">خطا</div>
         </div>
-
     </div>
 
     <!-- ============================================================ -->
@@ -308,18 +627,29 @@
     <!-- ============================================================ -->
     <script>
         // ============================================================
-        // ۰. توابع کمکی - مدیریت احراز هویت
+        // ۰. توابع کمکی
         // ============================================================
         
+        const API_BASE = '/api';
+        let map = null;
+        let selectedPolygon = null;
+        let centerPoint = null;
+        let polygonArea = 0;
+        let pendingCoordinates = null;
+        let currentFarmId = null;
+        let drawnItems = null;
+        let drawControl = null;
+        let soilLayer = null;
+        let allSamplesData = [];
+
         function getToken() {
             return localStorage.getItem('access_token');
         }
 
         function getHeaders() {
-            const token = getToken();
             return {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                'Authorization': `Bearer ${getToken()}`
             };
         }
 
@@ -330,225 +660,106 @@
         }
 
         // ============================================================
-        // ۱. دریافت پارامترهای URL
+        // ۱. نقشه
         // ============================================================
         
-        function getUrlParams() {
-            const params = new URLSearchParams(window.location.search);
-            return {
-                farm_id: params.get('farm_id')
-            };
-        }
-
-        // ============================================================
-        // ۲. بارگذاری مزرعه از API
-        // ============================================================
-        
-        async function loadFarmFromApi(farmId) {
-            if (!farmId) return null;
-            
-            try {
-                const token = getToken();
-                if (!token) {
-                    redirectToLogin();
-                    return null;
-                }
-
-                const response = await fetch(`${API_BASE}/farms/${farmId}/`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-
-                if (response.status === 401) {
-                    redirectToLogin();
-                    return null;
-                }
-
-                if (!response.ok) {
-                    throw new Error('خطا در دریافت اطلاعات مزرعه');
-                }
-
-                const farm = await response.json();
-                return farm;
-
-            } catch (error) {
-                console.error('Error loading farm:', error);
-                return null;
-            }
-        }
-
-        // ============================================================
-        // ۳. نمایش مزرعه روی نقشه
-        // ============================================================
-        
-        function showFarmOnMap(farm) {
-            if (!farm || !farm.geometry_coords || farm.geometry_coords.length === 0) {
-                document.getElementById('map-subtitle').textContent = 'مزرعه مورد نظر پیدا نشد یا مختصاتی ندارد';
-                return;
-            }
-
-            // بروزرسانی عنوان
-            document.getElementById('map-subtitle').textContent = `📍 ${farm.name} - برای تحلیل جدید، محدوده جدید رسم کنید`;
-
-            // تبدیل مختصات به فرمت Leaflet
-            const coords = farm.geometry_coords.map(p => [p[1], p[0]]); // [lat, lng]
-            
-            // حذف پلی‌گون قبلی
-            if (window.farmPolygon) {
-                map.removeLayer(window.farmPolygon);
-            }
-
-            // ایجاد پلی‌گون جدید با رنگ متفاوت
-            window.farmPolygon = L.polygon(coords, {
-                color: '#0d9488',
-                weight: 4,
-                fillColor: '#0d9488',
-                fillOpacity: 0.15,
-                dashArray: null,
+        function initMap() {
+            map = L.map('map', { center: [32.5, 54.5], zoom: 5 });
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
             }).addTo(map);
 
-            // اضافه کردن پاپ‌آپ
-            window.farmPolygon.bindPopup(`
-                <div style="direction:rtl; text-align:right; padding:8px;">
-                    <strong class="text-green-700">${farm.name}</strong><br>
-                    <span class="text-sm text-gray-600">مساحت: ${farm.area || 'نامشخص'} هکتار</span><br>
-                    <span class="text-sm text-gray-600">${farm.address || ''}</span><br>
-                    <button onclick="startNewAnalysis()" class="mt-2 bg-green-600 text-white px-4 py-1 rounded text-sm hover:bg-green-700">
-                        <i class="bi bi-graph-up ml-1"></i> تحلیل جدید
-                    </button>
-                </div>
-            `).openPopup();
+            drawnItems = new L.FeatureGroup();
+            map.addLayer(drawnItems);
 
-            // زوم به محدوده مزرعه
-            const bounds = window.farmPolygon.getBounds();
-            if (bounds.isValid()) {
-                map.fitBounds(bounds, { padding: [50, 50] });
-            }
+            drawControl = new L.Control.Draw({
+                draw: {
+                    polygon: {
+                        allowIntersection: false,
+                        showArea: true,
+                        shapeOptions: {
+                            color: '#0d9488',
+                            weight: 3,
+                            fillColor: '#0d9488',
+                            fillOpacity: 0.15
+                        },
+                        drawError: {
+                            color: '#b91c1c',
+                            message: 'لطفاً نقاط را به درستی رسم کنید'
+                        }
+                    },
+                    rectangle: false,
+                    circle: false,
+                    marker: false,
+                    circlemarker: false,
+                    polyline: false
+                },
+                edit: { featureGroup: drawnItems, remove: true }
+            });
+            map.addControl(drawControl);
 
-            // ذخیره farm_id برای تحلیل
-            window.currentFarmId = farm.id;
-            
-            // فعال کردن دکمه تحلیل
-            document.getElementById('get-analysis').disabled = false;
-        }
+            // ===== رویدادها =====
+            map.on(L.Draw.Event.DRAWSTART, function() {
+                document.getElementById('drawing-hint').classList.add('show');
+                document.getElementById('map-subtitle').textContent = '📍 روی نقشه کلیک کنید تا نقاط مزرعه را مشخص کنید';
+            });
 
-        // ============================================================
-        // ۴. شروع تحلیل جدید (از پاپ‌آپ)
-        // ============================================================
-        
-        function startNewAnalysis() {
-            // بستن پاپ‌آپ و فعال کردن حالت رسم
-            map.closePopup();
-            alert('برای تحلیل جدید، یک محدوده جدید روی نقشه رسم کنید.');
-            // فعال کردن ابزار رسم
-            if (window.drawControl) {
-                // اگر drawControl موجود است، کاربر می‌تواند رسم کند
-            }
-        }
+            map.on(L.Draw.Event.DRAWSTOP, function() {
+                document.getElementById('drawing-hint').classList.remove('show');
+            });
 
-        // ============================================================
-        // ۵. دانلود PDF
-        // ============================================================
-        
-        function downloadPDF(url, token) {
-            if (!token) {
-                alert('لطفاً وارد شوید');
-                redirectToLogin();
-                return;
-            }
+            map.on(L.Draw.Event.CREATED, function(event) {
+                const layer = event.layer;
+                if (selectedPolygon) { map.removeLayer(selectedPolygon); selectedPolygon = null; }
+                selectedPolygon = layer;
+                drawnItems.addLayer(layer);
+                centerPoint = layer.getBounds().getCenter();
+                polygonArea = L.GeometryUtil.geodesicArea(layer.getLatLngs()[0]) / 10000;
+                pendingCoordinates = layer.getLatLngs()[0].map(l => [l.lng, l.lat]);
+                
+                document.getElementById('drawing-hint').classList.remove('show');
+                document.getElementById('modal-area').textContent = polygonArea.toFixed(2);
+                document.getElementById('farm-modal').classList.add('active');
+                document.getElementById('farm-name-input').focus();
+                document.getElementById('map-subtitle').textContent = '✅ مزرعه رسم شد! اطلاعات را تکمیل کنید';
+                document.getElementById('get-analysis').disabled = true;
+            });
 
-            fetch(url, {
-                method: 'GET',
-                headers: { 'Authorization': `Bearer ${token}` }
-            })
-            .then(response => {
-                if (response.status === 401) {
-                    alert('لطفاً مجدداً وارد شوید');
-                    redirectToLogin();
-                    throw new Error('Unauthorized');
-                }
-                if (!response.ok) throw new Error('خطا در دانلود PDF');
-                return response.blob();
-            })
-            .then(blob => {
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `analysis_report_${Date.now()}.pdf`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(link.href);
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('خطا در دانلود PDF: ' + error.message);
+            map.on(L.Draw.Event.DELETED, function() {
+                selectedPolygon = null;
+                centerPoint = null;
+                polygonArea = 0;
+                pendingCoordinates = null;
+                document.getElementById('get-analysis').disabled = true;
+                document.getElementById('result-panel').classList.remove('show');
+                document.getElementById('map-subtitle').textContent = 'برای تحلیل، یک پلی‌گون رسم کنید';
             });
         }
 
         // ============================================================
-        // ۶. نقشه و کنترل‌های رسم
+        // ۲. بارگذاری نمونه‌ها (برای لایه‌ها)
         // ============================================================
         
-        const API_BASE = '/api';
-        const map = L.map('map').setView([32.5, 54.5], 5);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors'
-        }).addTo(map);
-
-        let selectedPolygon = null;
-        let centerPoint = null;
-        let polygonArea = 0;
-        let pendingCoordinates = null;
-
-        const drawnItems = new L.FeatureGroup();
-        map.addLayer(drawnItems);
-
-        const drawControl = new L.Control.Draw({
-            draw: {
-                polygon: {
-                    allowIntersection: false,
-                    showArea: true,
-                    shapeOptions: { color: '#2e7d32', weight: 3 }
-                },
-                rectangle: false,
-                circle: false,
-                marker: false,
-                circlemarker: false,
-                polyline: false
-            },
-            edit: {
-                featureGroup: drawnItems,
-                remove: true
+        async function loadAllSamples() {
+            try {
+                const token = getToken();
+                const response = await fetch('/api/analyses/soil-layers/?layer=ph', {
+                    headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+                });
+                if (!response.ok) throw new Error('خطا در دریافت نمونه‌ها');
+                const data = await response.json();
+                allSamplesData = data.features || [];
+                console.log(`✅ ${allSamplesData.length} نمونه بارگذاری شد`);
+                return allSamplesData;
+            } catch (error) {
+                console.error('Error loading samples:', error);
+                allSamplesData = [];
+                return [];
             }
-        });
-        map.addControl(drawControl);
-        window.drawControl = drawControl;
-
-        map.on(L.Draw.Event.CREATED, function(event) {
-            const layer = event.layer;
-            drawnItems.addLayer(layer);
-            if (selectedPolygon) map.removeLayer(selectedPolygon);
-            selectedPolygon = layer;
-            centerPoint = layer.getBounds().getCenter();
-            polygonArea = L.GeometryUtil.geodesicArea(layer.getLatLngs()[0]) / 10000;
-            pendingCoordinates = layer.getLatLngs()[0].map(l => [l.lng, l.lat]);
-
-            document.getElementById('get-analysis').disabled = true;
-            document.getElementById('modal-area').textContent = polygonArea.toFixed(2);
-            document.getElementById('farm-modal').classList.add('active');
-            document.getElementById('farm-name-input').focus();
-        });
-
-        map.on(L.Draw.Event.DELETED, function() {
-            selectedPolygon = null;
-            centerPoint = null;
-            polygonArea = 0;
-            pendingCoordinates = null;
-            document.getElementById('get-analysis').disabled = true;
-            document.getElementById('result-panel').classList.add('hidden');
-        });
+        }
 
         // ============================================================
-        // ۷. ثبت مزرعه
+        // ۳. ثبت مزرعه
         // ============================================================
         
         document.getElementById('save-farm-btn').addEventListener('click', function() {
@@ -559,11 +770,10 @@
             
             if (!name) {
                 errorDiv.textContent = 'لطفاً نام مزرعه را وارد کنید';
-                errorDiv.classList.remove('hidden');
+                errorDiv.classList.add('show');
                 return;
             }
-            
-            errorDiv.classList.add('hidden');
+            errorDiv.classList.remove('show');
             
             fetch('/api/analyses/create-farm/', {
                 method: 'POST',
@@ -576,10 +786,7 @@
                 })
             })
             .then(response => {
-                if (response.status === 401) {
-                    redirectToLogin();
-                    throw new Error('لطفاً وارد شوید');
-                }
+                if (response.status === 401) { redirectToLogin(); throw new Error('لطفاً وارد شوید'); }
                 return response.json();
             })
             .then(data => {
@@ -587,30 +794,25 @@
                     document.getElementById('farm-modal').classList.remove('active');
                     document.getElementById('farm-name-input').value = '';
                     document.getElementById('farm-address-input').value = '';
-                    document.getElementById('province-select').selectedIndex = 0;
-
                     document.getElementById('get-analysis').disabled = false;
-
-                    L.popup()
-                        .setLatLng(centerPoint)
-                        .setContent(`
-                            <div class="text-center">
-                                <strong class="text-green-600">${data.farm.name}</strong><br>
-                                مساحت: ${data.farm.area.toFixed(2)} هکتار<br>
-                                <span class="text-sm text-gray-600">✅ ${data.message}</span>
-                            </div>
-                        `)
-                        .openOn(map);
-
-                    window.currentFarmId = data.farm.id;
+                    currentFarmId = data.farm.id;
+                    document.getElementById('map-subtitle').textContent = `📍 ${data.farm.name} - آماده تحلیل`;
+                    
+                    L.popup().setLatLng(centerPoint).setContent(`
+                        <div class="text-center" style="direction:rtl;">
+                            <strong class="text-green-600">${data.farm.name}</strong><br>
+                            مساحت: ${data.farm.area.toFixed(2)} هکتار<br>
+                            <span class="text-sm text-gray-600">✅ ${data.message}</span>
+                        </div>
+                    `).openOn(map);
                 } else {
                     errorDiv.textContent = data.error || 'خطا در ثبت مزرعه';
-                    errorDiv.classList.remove('hidden');
+                    errorDiv.classList.add('show');
                 }
             })
             .catch(error => {
                 errorDiv.textContent = error.message || 'خطا در ارتباط با سرور';
-                errorDiv.classList.remove('hidden');
+                errorDiv.classList.add('show');
             });
         });
 
@@ -618,101 +820,149 @@
             document.getElementById('farm-modal').classList.remove('active');
             document.getElementById('farm-name-input').value = '';
             document.getElementById('farm-address-input').value = '';
-            document.getElementById('farm-error').classList.add('hidden');
-
-            if (selectedPolygon) {
-                map.removeLayer(selectedPolygon);
-                selectedPolygon = null;
-            }
+            document.getElementById('farm-error').classList.remove('show');
+            if (selectedPolygon) { map.removeLayer(selectedPolygon); selectedPolygon = null; }
             drawnItems.clearLayers();
             pendingCoordinates = null;
+            document.getElementById('map-subtitle').textContent = 'برای تحلیل، یک پلی‌گون رسم کنید';
         });
 
         // ============================================================
-        // ۸. تحلیل خاک
+        // ۴. تحلیل خاک
         // ============================================================
         
         document.getElementById('get-analysis').addEventListener('click', function() {
-            if (!selectedPolygon || !window.currentFarmId) {
+            if (!selectedPolygon || !currentFarmId) {
                 alert('لطفاً ابتدا یک مزرعه ثبت کنید');
                 return;
             }
+            if (!centerPoint) return;
 
             const lat = centerPoint.lat;
             const lng = centerPoint.lng;
 
+            // ===== پیدا کردن نزدیک‌ترین نمونه =====
+            let nearest = null;
+            let minDist = Infinity;
+            allSamplesData.forEach(f => {
+                const coords = f.geometry.coordinates;
+                const d = Math.sqrt(Math.pow(coords[1] - lat, 2) + Math.pow(coords[0] - lng, 2));
+                if (d < minDist) { minDist = d; nearest = f.properties; }
+            });
+
+            const payload = {
+                farm_id: currentFarmId,
+                ph: nearest ? nearest.ph : null,
+                ec: nearest ? nearest.ec : null,
+                organic_matter: nearest ? nearest.organic_matter : null,
+                nitrogen: nearest ? nearest.nitrogen : null,
+                phosphorus: nearest ? nearest.phosphorus : null,
+                potassium: nearest ? nearest.potassium : null,
+                texture: nearest ? nearest.texture : 'LOAM',
+                latitude: lat,
+                longitude: lng,
+                source_sample: nearest ? nearest.sample_code : null
+            };
+
+            const btn = document.getElementById('get-analysis');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="bi bi-hourglass-split animate-spin ml-1"></i> در حال تحلیل...';
+
             fetch('/api/analyses/analyze/', {
                 method: 'POST',
                 headers: getHeaders(),
-                body: JSON.stringify({
-                    farm_id: window.currentFarmId,
-                    ph: 7.2,
-                    ec: 0.8,
-                    organic_matter: 2.1,
-                    nitrogen: 45,
-                    phosphorus: 12,
-                    potassium: 180,
-                    iron: 6.5,
-                    zinc: 1.2,
-                    manganese: 3.0,
-                    copper: 0.5,
-                    texture: 'LOAM',
-                    latitude: lat,
-                    longitude: lng
-                })
+                body: JSON.stringify(payload)
             })
             .then(response => {
-                if (response.status === 401) {
-                    redirectToLogin();
-                    throw new Error('لطفاً وارد شوید');
-                }
+                if (response.status === 401) { redirectToLogin(); throw new Error('لطفاً وارد شوید'); }
                 return response.json();
             })
-            .then(data => displayResults(data))
-            .catch(error => alert('خطا در دریافت تحلیل: ' + error.message));
+            .then(data => {
+                displayResults(data, nearest, minDist);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-graph-up ml-1"></i> تحلیل خاک';
+            })
+            .catch(error => {
+                alert('خطا در تحلیل: ' + error.message);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-graph-up ml-1"></i> تحلیل خاک';
+            });
         });
 
         // ============================================================
-        // ۹. نمایش نتایج
+        // ۵. نمایش نتایج
         // ============================================================
         
-        function displayResults(data) {
+        function displayResults(data, nearest, distance) {
             const panel = document.getElementById('result-panel');
             const content = document.getElementById('result-content');
 
             if (data.error) {
                 content.innerHTML = `<div class="text-red-600">${data.error}</div>`;
-                panel.classList.remove('hidden');
+                panel.classList.add('show');
                 return;
             }
 
+            
+    // ===== درجه اطمینان =====
+    const confidence = data.confidence || 70;
+    let confidenceColor = 'text-green-600';
+    let confidenceText = 'بالا';
+    if (confidence < 40) {
+        confidenceColor = 'text-red-600';
+        confidenceText = 'پایین';
+    } else if (confidence < 70) {
+        confidenceColor = 'text-yellow-600';
+        confidenceText = 'متوسط';
+    }
+
+    let confidenceHtml = `
+        <div style="font-size:12px; color:#64748b; margin-top:4px;">
+            <span class="${confidenceColor}">●</span>
+            درجه اطمینان: ${confidence}% (${confidenceText})
+            <span style="font-size:11px; color:#94a3b8; margin-right:8px;">
+                ${confidence >= 70 ? '✅ داده‌های کافی' : confidence >= 40 ? '⚠️ داده‌های محدود' : '❌ داده‌های ناکافی'}
+            </span>
+        </div>
+    `;
             const bestCrop = data.best_crop;
             const healthIndex = data.soil_health_index || 0;
             const healthLevel = data.soil_health_display || 'نامشخص';
             const recommendedCrops = data.recommended_crops || [];
             const climateData = data.climate_data || null;
 
-            let healthClass = 'health-poor';
-            if (healthIndex >= 80) healthClass = 'health-excellent';
-            else if (healthIndex >= 60) healthClass = 'health-good';
-            else if (healthIndex >= 40) healthClass = 'health-fair';
+            let healthClass = 'poor';
+            if (healthIndex >= 80) healthClass = 'excellent';
+            else if (healthIndex >= 60) healthClass = 'good';
+            else if (healthIndex >= 40) healthClass = 'fair';
 
             let healthColor = 'text-red-600';
             if (healthIndex >= 80) healthColor = 'text-green-600';
             else if (healthIndex >= 60) healthColor = 'text-blue-600';
             else if (healthIndex >= 40) healthColor = 'text-yellow-600';
 
+            // منبع داده
+            let sourceHtml = '';
+            if (nearest) {
+                const distKm = (distance * 111).toFixed(1);
+                sourceHtml = `
+                    <div class="source-badge">
+                        📍 بر اساس نمونه ${nearest.sample_code || 'نزدیک'} (${distKm} کیلومتر)
+                    </div>
+                `;
+            }
+
             // اقلیم
             let climateHtml = '';
             if (climateData) {
                 climateHtml = `
-                    <div class="mt-6 pt-4 border-t border-gray-200">
-                        <h3 class="font-bold text-gray-700 mb-3">🌤️ شرایط اقلیمی منطقه</h3>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                            <div class="climate-card"><div class="climate-value">${climateData.avg_temperature || '--'}°C</div><div class="climate-label">میانگین دما</div></div>
-                            <div class="climate-card"><div class="climate-value">${climateData.rainfall || '--'} mm</div><div class="climate-label">بارندگی ماهانه</div></div>
-                            <div class="climate-card"><div class="climate-value">${climateData.humidity || '--'}%</div><div class="climate-label">رطوبت نسبی</div></div>
-                            <div class="climate-card"><div class="climate-value">${climateData.sunny_days || '--'}</div><div class="climate-label">روزهای آفتابی</div></div>
+                    <div style="margin-top:8px; padding-top:8px; border-top:1px solid #e2e8f0;">
+                        <div style="font-weight:600; color:#374151; font-size:13px; margin-bottom:4px;">🌤️ شرایط اقلیمی</div>
+                        <div class="climate-grid">
+                            <div class="item"><div class="val">${climateData.avg_temperature || '--'}°C</div><div class="lbl">دما</div></div>
+                            <div class="item"><div class="val">${climateData.rainfall || '--'} mm</div><div class="lbl">بارندگی</div></div>
+                            <div class="item"><div class="val">${climateData.humidity || '--'}%</div><div class="lbl">رطوبت</div></div>
+                            <div class="item"><div class="val">${climateData.sunny_days || '--'}</div><div class="lbl">روز آفتابی</div></div>
                         </div>
                     </div>
                 `;
@@ -720,128 +970,124 @@
 
             // کود
             let fertilizerHtml = '';
-            if (bestCrop && bestCrop.fertilizer_advice) {
-                if (Array.isArray(bestCrop.fertilizer_advice) && bestCrop.fertilizer_advice.length > 0) {
-                    fertilizerHtml = `
-                        <div class="mt-3 pt-3 border-t border-green-200 text-sm">
-                            <div class="font-medium text-gray-700">🧪 توصیه‌های کودی دقیق:</div>
-                            ${bestCrop.fertilizer_advice.map(adv => `
-                                <div class="fertilizer-item">
-                                    <span>${adv.fertilizer_name}: <strong>${adv.amount}</strong> ${adv.unit}</span>
-                                    <span class="text-xs text-gray-400">${adv.timing}</span>
-                                </div>
-                            `).join('')}
-                            ${bestCrop.fertilizer_advice.some(adv => adv.cost) ? `
-                                <div class="mt-2 text-xs text-gray-500">
-                                    هزینه تقریبی کودها: ${bestCrop.fertilizer_advice.reduce((sum, adv) => sum + (adv.cost || 0), 0).toLocaleString()} تومان
-                                </div>
-                            ` : ''}
-                        </div>
-                    `;
-                } else if (typeof bestCrop.fertilizer_advice === 'string') {
-                    fertilizerHtml = `
-                        <div class="mt-3 pt-3 border-t border-green-200 text-sm">
-                            <div class="font-medium text-gray-700">🧪 توصیه کودی:</div>
-                            <div class="text-gray-600">${bestCrop.fertilizer_advice}</div>
-                        </div>
-                    `;
-                }
+            if (bestCrop && bestCrop.fertilizer_advice && Array.isArray(bestCrop.fertilizer_advice)) {
+                fertilizerHtml = `
+                    <div style="margin-top:8px; padding-top:8px; border-top:1px solid #e2e8f0;">
+                        <div style="font-weight:600; color:#374151; font-size:13px;">🧪 توصیه کودی</div>
+                        ${bestCrop.fertilizer_advice.slice(0, 2).map(adv => `
+                            <div class="fertilizer-item">
+                                <span>${adv.fertilizer_name}: <strong>${adv.amount}</strong> ${adv.unit}</span>
+                                <span style="font-size:11px; color:#94a3b8;">${adv.timing}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
             }
 
+            // ساخت HTML
             let html = `
-                <div class="flex flex-wrap items-center gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
-                    <div>
-                        <div class="text-sm text-gray-500">شاخص سلامت خاک</div>
-                        <div class="text-3xl font-bold ${healthColor}">${healthIndex}%</div>
-                    </div>
-                    <div>
-                        <span class="health-badge ${healthClass}">${healthLevel}</span>
-                        <p class="text-sm text-gray-600 mt-1 max-w-xl">${data.summary || ''}</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <h3 class="font-bold text-gray-700 mb-2">💰 بهترین محصول پیشنهادی</h3>
-                        ${bestCrop ? `
-                            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
-                                <div class="text-2xl font-bold text-green-700">${bestCrop.crop_name || ''}</div>
-                                <div class="mt-2 text-sm text-gray-600">
-                                    <div class="flex justify-between"><span>امتیاز تناسب:</span> <span class="font-bold">${bestCrop.suitability_score || 0}%</span></div>
-                                    <div class="flex justify-between"><span>عملکرد پیش‌بینی:</span> <span class="font-bold">${bestCrop.predicted_yield || 0} تن/هکتار</span></div>
-                                    <div class="flex justify-between mt-2 text-lg"><span>سود پیش‌بینی:</span> <span class="font-bold text-green-700">${(bestCrop.predicted_profit || 0).toLocaleString()} تومان/هکتار</span></div>
-                                </div>
-                                ${fertilizerHtml}
-                            </div>
-                        ` : `<div class="text-gray-500 bg-gray-50 p-4 rounded-lg">هیچ محصول مناسبی یافت نشد</div>`}
-                    </div>
-
-                    <div>
-                        <h3 class="font-bold text-gray-700 mb-2">📋 سایر محصولات پیشنهادی</h3>
-                        <div class="space-y-2">
-                            ${recommendedCrops.length > 0 ? recommendedCrops.slice(0, 3).map(crop => `
-                                <div class="border border-gray-200 p-3 rounded-lg hover:border-green-300 transition">
-                                    <div class="flex justify-between items-center">
-                                        <span class="font-bold text-gray-800">${crop.crop_name || ''}</span>
-                                        <span class="text-sm font-bold text-green-600">${crop.suitability_score || 0}%</span>
-                                    </div>
-                                    <div class="text-sm text-gray-600">سود: ${(crop.predicted_profit || 0).toLocaleString()} تومان/هکتار</div>
-                                </div>
-                            `).join('') : `<div class="text-center text-gray-500 py-4">هیچ محصول دیگری پیشنهاد نشده است</div>`}
+                ${sourceHtml}
+                <div class="health-card">
+                    <div class="top">
+                        <div>
+                            <div style="font-size:11px; color:#64748b;">سلامت خاک</div>
+                            <div class="number ${healthColor}">${healthIndex}%</div>
+                        </div>
+                        <div>
+                            <span class="badge ${healthClass}">${healthLevel}</span>
                         </div>
                     </div>
+                    <div class="summary">${data.summary || ''}</div>
                 </div>
+
+                <div style="font-weight:600; color:#374151; font-size:14px; margin:8px 0 6px 0;">💰 بهترین محصول</div>
+                ${bestCrop ? `
+                    <div class="crop-item">
+                        <div class="name">${bestCrop.crop_name || ''}</div>
+                        <div class="detail-row"><span class="label">امتیاز تناسب:</span><span class="value">${bestCrop.suitability_score || 0}%</span></div>
+                        <div class="detail-row"><span class="label">عملکرد پیش‌بینی:</span><span class="value">${bestCrop.predicted_yield || 0} تن/هکتار</span></div>
+                        <div class="detail-row" style="font-size:14px;"><span class="label">سود پیش‌بینی:</span><span class="value text-green-700">${(bestCrop.predicted_profit || 0).toLocaleString()} تومان</span></div>
+                        ${fertilizerHtml}
+                    </div>
+                ` : `<div style="color:#64748b; font-size:13px; padding:8px 0;">محصولی یافت نشد</div>`}
+
+                <div style="font-weight:600; color:#374151; font-size:14px; margin:8px 0 6px 0;">📋 سایر محصولات</div>
+                ${recommendedCrops.length > 0 ? recommendedCrops.slice(0, 2).map(crop => `
+                    <div class="crop-item" style="margin-bottom:6px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-weight:600; font-size:14px;">${crop.crop_name || ''}</span>
+                            <span style="font-weight:600; color:#0d9488; font-size:13px;">${crop.suitability_score || 0}%</span>
+                        </div>
+                        <div style="font-size:12px; color:#64748b;">سود: ${(crop.predicted_profit || 0).toLocaleString()} تومان</div>
+                    </div>
+                `).join('') : `<div style="color:#64748b; font-size:13px; padding:4px 0;">محصول دیگری نیست</div>`}
                 ${climateHtml}
             `;
 
             content.innerHTML = html;
 
-            // دکمه PDF
             if (data.analysis_id) {
                 const token = localStorage.getItem('access_token');
                 const pdfUrl = `/api/analyses/${data.analysis_id}/pdf/`;
-                const downloadDiv = document.createElement('div');
-                downloadDiv.className = 'mt-4 text-center';
-                downloadDiv.innerHTML = `
-                    <button onclick="downloadPDF('${pdfUrl}', '${token}')" 
-                            class="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition inline-flex items-center">
-                        <i class="bi bi-file-pdf ml-2"></i> دانلود گزارش PDF
-                    </button>
-                `;
-                content.appendChild(downloadDiv);
+                const downloadBtn = document.createElement('button');
+                downloadBtn.className = 'btn-pdf';
+                downloadBtn.innerHTML = '<i class="bi bi-file-pdf ml-2"></i> دانلود گزارش PDF';
+                downloadBtn.onclick = function() { downloadPDF(pdfUrl, token); };
+                content.appendChild(downloadBtn);
             }
 
-            panel.classList.remove('hidden');
-            panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            panel.classList.add('show');
+            // اسکرول به پایین برای دیدن نتایج
+            setTimeout(() => {
+                const panelEl = document.getElementById('result-panel');
+                if (panelEl) {
+                    panelEl.scrollTop = 0;
+                }
+            }, 100);
         }
 
         // ============================================================
-        // ۱۰. لایه‌های خاک
+        // ۶. دانلود PDF
         // ============================================================
         
-        let soilLayer = null;
+        function downloadPDF(url, token) {
+            if (!token) { alert('لطفاً وارد شوید'); redirectToLogin(); return; }
+            fetch(url, { method: 'GET', headers: { 'Authorization': `Bearer ${token}` } })
+            .then(response => {
+                if (response.status === 401) { alert('لطفاً مجدداً وارد شوید'); redirectToLogin(); throw new Error('Unauthorized'); }
+                if (!response.ok) throw new Error('خطا در دانلود PDF');
+                return response.blob();
+            })
+            .then(blob => {
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `analysis_report_${Date.now()}.pdf`;
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+            })
+            .catch(error => { alert('خطا در دانلود PDF: ' + error.message); });
+        }
 
+        // ============================================================
+        // ۷. لایه‌های خاک
+        // ============================================================
+        
         async function loadSoilLayer(layerType) {
             try {
                 const token = getToken();
                 const response = await fetch(`/api/analyses/soil-layers/?layer=${layerType}`, {
                     headers: token ? { 'Authorization': `Bearer ${token}` } : {}
                 });
-
                 if (!response.ok) throw new Error('خطا در دریافت داده‌های خاک');
-
                 const data = await response.json();
                 if (soilLayer) { map.removeLayer(soilLayer); soilLayer = null; }
-                if (data.features.length === 0) {
-                    alert('هیچ داده‌ای برای این لایه وجود ندارد');
-                    return;
-                }
-
+                if (data.features.length === 0) { alert('هیچ داده‌ای برای این لایه وجود ندارد'); return; }
+                
                 soilLayer = L.geoJSON(data, {
                     pointToLayer: (feature, latlng) => {
                         const color = feature.properties.color || '#808080';
                         return L.circleMarker(latlng, {
-                            radius: 8,
+                            radius: 7,
                             fillColor: color,
                             color: '#fff',
                             weight: 2,
@@ -851,14 +1097,14 @@
                     onEachFeature: (feature, layer) => {
                         const p = feature.properties;
                         layer.bindPopup(`
-                            <div style="min-width:200px; direction:rtl;">
-                                <div class="font-bold">${p.farm_name || 'نامشخص'}</div>
-                                <div class="text-sm">کد نمونه: ${p.sample_code || '---'}</div>
+                            <div style="min-width:180px; direction:rtl;">
+                                <div style="font-weight:700; font-size:14px;">${p.farm_name || 'نامشخص'}</div>
+                                <div style="font-size:12px;">کد: ${p.sample_code || '---'}</div>
                                 <hr>
-                                <div class="text-sm">
+                                <div style="font-size:12px;">
                                     <div>pH: ${p.ph || '---'}</div>
                                     <div>EC: ${p.ec || '---'} dS/m</div>
-                                    <div>ماده آلی: ${p.organic_matter || '---'}%</div>
+                                    <div>OM: ${p.organic_matter || '---'}%</div>
                                     <div>بافت: ${p.texture_display || p.texture || '---'}</div>
                                 </div>
                             </div>
@@ -866,18 +1112,15 @@
                     }
                 }).addTo(map);
 
-                // راهنما
                 const legend = document.getElementById('layer-legend');
-                const text = document.getElementById('legend-text');
-                legend.classList.remove('hidden');
-
                 const guides = {
-                    ph: 'راهنمای pH: 🔴 اسیدی (&lt;6.5) | 🟢 خنثی (6.5-7.5) | 🔵 قلیایی (&gt;7.5)',
-                    organic_matter: 'راهنمای ماده آلی: 🟡 کم (&lt;1%) | 🟢 متوسط (1-2%) | 🟢 تیره زیاد (&gt;2%)',
-                    texture: 'راهنمای بافت: 🟨 شنی | 🟩 لوم | 🟫 رسی'
+                    ph: '🔴 اسیدی | 🟢 خنثی | 🔵 قلیایی',
+                    organic_matter: '🟡 کم | 🟢 متوسط | 🟢 تیره زیاد',
+                    texture: '🟨 شنی | 🟩 لوم | 🟫 رسی'
                 };
-                text.textContent = guides[layerType] || '';
-
+                legend.textContent = guides[layerType] || '';
+                legend.classList.add('show');
+                
                 if (data.features.length > 0) {
                     const bounds = soilLayer.getBounds();
                     if (bounds.isValid()) map.fitBounds(bounds, { padding: [50, 50] });
@@ -889,62 +1132,80 @@
 
         document.querySelectorAll('.layer-btn').forEach(btn => {
             btn.addEventListener('click', function() {
-                document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('ring-2', 'ring-offset-2', 'ring-green-500'));
-                this.classList.add('ring-2', 'ring-offset-2', 'ring-green-500');
+                if (this.id === 'clear-layers') {
+                    if (soilLayer) { map.removeLayer(soilLayer); soilLayer = null; }
+                    document.getElementById('layer-legend').classList.remove('show');
+                    document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('active'));
+                    return;
+                }
+                document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
                 loadSoilLayer(this.dataset.layer);
             });
         });
 
         document.getElementById('clear-layers').addEventListener('click', function() {
             if (soilLayer) { map.removeLayer(soilLayer); soilLayer = null; }
-            document.getElementById('layer-legend').classList.add('hidden');
-            document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('ring-2', 'ring-offset-2', 'ring-green-500'));
+            document.getElementById('layer-legend').classList.remove('show');
+            document.querySelectorAll('.layer-btn').forEach(b => b.classList.remove('active'));
         });
 
         // ============================================================
-        // ۱۱. بستن پنل نتایج
+        // ۸. بستن پنل نتایج
         // ============================================================
         
         document.getElementById('close-result').addEventListener('click', function() {
-            document.getElementById('result-panel').classList.add('hidden');
+            document.getElementById('result-panel').classList.remove('show');
         });
 
         // ============================================================
-        // ۱۲. بارگذاری اولیه - دریافت farm_id از URL
+        // ۹. بارگذاری اولیه
         // ============================================================
         
         document.addEventListener('DOMContentLoaded', async function() {
             const token = getToken();
-            if (!token) {
-                redirectToLogin();
-                return;
-            }
-
-            // دریافت پارامترهای URL
-            const params = getUrlParams();
-            const farmId = params.farm_id;
-
+            if (!token) { redirectToLogin(); return; }
+            
+            initMap();
+            await loadAllSamples();
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const farmId = urlParams.get('farm_id');
+            
             if (farmId) {
-                // نمایش لودینگ
-                const loading = document.getElementById('loading-overlay');
-                loading.classList.remove('hidden');
-
                 try {
-                    const farm = await loadFarmFromApi(farmId);
-                    if (farm) {
-                        showFarmOnMap(farm);
-                    } else {
-                        document.getElementById('map-subtitle').textContent = '⚠️ مزرعه مورد نظر یافت نشد';
+                    const response = await fetch(`${API_BASE}/farms/${farmId}/`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                    });
+                    if (response.ok) {
+                        const farm = await response.json();
+                        if (farm && farm.geometry_coords && farm.geometry_coords.length > 0) {
+                            const coords = farm.geometry_coords.map(p => [p[1], p[0]]);
+                            if (selectedPolygon) { map.removeLayer(selectedPolygon); }
+                            selectedPolygon = L.polygon(coords, {
+                                color: '#0d9488',
+                                weight: 4,
+                                fillColor: '#0d9488',
+                                fillOpacity: 0.15
+                            }).addTo(map);
+                            map.fitBounds(selectedPolygon.getBounds(), { padding: [50, 50] });
+                            document.getElementById('map-subtitle').textContent = `📍 ${farm.name} - آماده تحلیل`;
+                            currentFarmId = farm.id;
+                            centerPoint = selectedPolygon.getBounds().getCenter();
+                            document.getElementById('get-analysis').disabled = false;
+                            
+                            selectedPolygon.bindPopup(`
+                                <div style="direction:rtl; text-align:right; padding:8px;">
+                                    <strong class="text-green-700">${farm.name}</strong><br>
+                                    <span class="text-sm text-gray-600">مساحت: ${farm.area || 'نامشخص'} هکتار</span>
+                                </div>
+                            `).openPopup();
+                        }
                     }
-                } catch (error) {
-                    console.error('Error:', error);
-                    document.getElementById('map-subtitle').textContent = '⚠️ خطا در بارگذاری مزرعه';
-                } finally {
-                    loading.classList.add('hidden');
-                }
-            } else {
-                document.getElementById('map-subtitle').textContent = 'روی نقشه کلیک کنید و محدوده مزرعه را رسم کنید';
+                } catch (e) { console.warn('Error loading farm:', e); }
             }
+            
+            console.log('✅ نقشه آماده است');
         });
     </script>
 </body>
