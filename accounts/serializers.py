@@ -15,11 +15,6 @@ class RegisterSerializer(serializers.ModelSerializer):
     password2 = serializers.CharField(write_only=True, required=True)
     phone = serializers.CharField(write_only=True, required=True)
     national_id = serializers.CharField(write_only=True, required=True)
-    role = serializers.ChoiceField(
-            choices=['ADMIN', 'EXPERT', 'LAB', 'CRM', 'FARMER', 'VIEWER'],
-            required=False,
-            default='FARMER'
-        )
 
     class Meta:
         model = User
@@ -35,7 +30,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         phone = validated_data.pop('phone')
         national_id = validated_data.pop('national_id')
         password2 = validated_data.pop('password2')
-        role = validated_data.pop('role', 'FARMER')
         
         # ایجاد کاربر
         user = User.objects.create(
@@ -60,7 +54,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         # ایجاد UserProfile با نقش مشخص
         UserProfile.objects.create(
             user=user,
-            role=role,
+            role='FARMER',
             phone=phone,
             is_verified=False,
         )
