@@ -6,7 +6,7 @@ router = DefaultRouter()
 router.register(r'provinces', ProvinceViewSet)
 router.register(r'counties', CountyViewSet, basename='county')  
 router.register(r'farms', FarmViewSet)
-router.register(r'soil-samples', SoilSampleViewSet)
+router.register(r'soil-samples', SoilSampleViewSet, basename='soil-sample')
 router.register(r'analyses', SoilAnalysisViewSet, basename='analysis')
 
 
