@@ -184,9 +184,31 @@ class CountyViewSet(viewsets.ReadOnlyModelViewSet):
 # ================================================================
 
 class SoilSampleViewSet(viewsets.ModelViewSet):
-    queryset = SoilSample.objects.all().order_by('-sampling_date')
     serializer_class = SoilSampleSerializer
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        profile = getattr(user, 'profile', None)
+        role = profile.role if profile else None
+        if user.is_superuser or role in ['ADMIN', 'EXPERT']:
+            return SoilSample.objects.all().order_by('-sampling_date')
+        if role == 'FARMER':
+            return SoilSample.objects.filter(farm__farmer__user=user).order_by('-sampling_date')
+        if role == 'LAB' and profile.is_verified:
+            return SoilSample.objects.filter(source='LAB').order_by('-sampling_date')
+        return SoilSample.objects.none()
+
+    def perform_create(self, serializer):
+        farm = serializer.validated_data['farm']
+        user = self.request.user
+        profile = getattr(user, 'profile', None)
+        role = profile.role if profile else None
+        if not (user.is_superuser or role in ['ADMIN', 'EXPERT']):
+            if role != 'FARMER' or farm.farmer.user_id != user.id:
+                from rest_framework.exceptions import PermissionDenied
+                raise PermissionDenied('اجازه ثبت نمونه برای این مزرعه را ندارید.')
+        serializer.save(source='FIELD')
 
 
 # ================================================================
@@ -272,9 +294,9 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
             'reject_sample': IsAdminOrExpert,
             'pending_verification': IsAdminOrExpert,
             'verification_stats': IsAdminOrExpert,
-            'create_farm': AllowAny,
+            'create_farm': IsAuthenticated,
             'lab_list_samples': IsLabOrExpert,
-            'generate_pdf': AllowAny,
+            'generate_pdf': IsAuthenticated,
             'analyze_soil': IsAuthenticated,
             'expert_requests_list': IsAdminOrExpert,
             'accept_expert_request': IsAdminOrExpert,
@@ -340,16 +362,10 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
 
         user = request.user
         if not user.is_authenticated:
-            default_user, _ = User.objects.get_or_create(
-                username='farmer_default',
-                defaults={
-                    'first_name': 'کاربر',
-                    'last_name': 'پیش‌فرض',
-                    'email': 'farmer@abak.ir'
-                }
+            return Response(
+                {'error': 'برای ثبت مزرعه ابتدا وارد حساب کاربری شوید'},
+                status=status.HTTP_401_UNAUTHORIZED
             )
-            user = default_user
-            logger.warning("⚠️ کاربر لاگین نکرده، از کاربر پیش‌فرض استفاده شد")
 
         farm_name = request.data.get('name')
         coordinates = request.data.get('coordinates')
@@ -500,6 +516,17 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
             # دریافت مزرعه
             if farm_id:
                 farm = get_object_or_404(Farm, id=farm_id)
+                profile = getattr(request.user, 'profile', None)
+                role = profile.role if profile else None
+                if not (
+                    request.user.is_superuser
+                    or role in ['ADMIN', 'EXPERT']
+                    or farm.farmer.user_id == request.user.id
+                ):
+                    return Response(
+                        {'error': 'شما به این مزرعه دسترسی ندارید'},
+                        status=status.HTTP_403_FORBIDDEN
+                    )
                 province_name = farm.province.name if farm.province else 'تهران'
                 if not farm.province:
                     logger.warning("⚠️ استان مشخص نشد، از تهران به عنوان پیش‌فرض استفاده شد")
@@ -616,6 +643,17 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
         analysis = get_object_or_404(SoilAnalysis, pk=pk)
         sample = analysis.soil_sample
         farm = sample.farm
+        profile = getattr(request.user, 'profile', None)
+        role = profile.role if profile else None
+        if not (
+            request.user.is_superuser
+            or role in ['ADMIN', 'EXPERT']
+            or farm.farmer.user_id == request.user.id
+        ):
+            return Response(
+                {'error': 'شما اجازه دریافت این گزارش را ندارید'},
+                status=status.HTTP_403_FORBIDDEN
+            )
 
         # ===== Context in English =====
         context = {
