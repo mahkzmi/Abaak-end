@@ -16,6 +16,7 @@ class RegistrationRoleSecurityTests(TestCase):
             'first_name': 'Public',
             'last_name': 'User',
             'password': 'Safe-Test-Password-984!',
+            'password2': 'Safe-Test-Password-984!',
             'phone': '09120000000',
             'national_id': '1234567890',
             'role': 'ADMIN',
