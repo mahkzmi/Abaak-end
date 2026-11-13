@@ -429,20 +429,6 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_403_FORBIDDEN
             )
 
-        profile = getattr(user, 'profile', None)
-        if not profile or profile.role != 'FARMER':
-            return Response(
-                {'error': 'فقط حساب کشاورز مجاز به ثبت مزرعه است.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        try:
-            farmer = user.farmer_profile
-        except Farmer.DoesNotExist:
-            return Response(
-                {'error': 'پروفایل کشاورز برای این حساب ثبت نشده است.'},
-                status=status.HTTP_403_FORBIDDEN
-            )
-
         farm_name = request.data.get('name')
         coordinates = request.data.get('coordinates')
         address = request.data.get('address', '')
