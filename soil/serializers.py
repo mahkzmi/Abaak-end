@@ -28,6 +28,7 @@ class FarmSerializer(serializers.ModelSerializer):
         model = Farm
         fields = ['id', 'name', 'farmer', 'farmer_name', 'area', 'area_display', 
                   'geometry_coords', 'address', 'province', 'county', 'created_at']
+        read_only_fields = ['farmer', 'created_at']
         # توجه: geometry رو برداشتم و geometry_coords رو جایگزین کردم
     
     def get_area_display(self, obj):
