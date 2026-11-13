@@ -286,6 +286,21 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
     queryset = SoilAnalysis.objects.all().order_by('-created_at')
     serializer_class = SoilAnalysisSerializer
 
+    def get_queryset(self):
+        user = self.request.user
+        if not user.is_authenticated:
+            return SoilAnalysis.objects.none()
+        profile = getattr(user, 'profile', None)
+        role = profile.role if profile else None
+        queryset = SoilAnalysis.objects.select_related('soil_sample__farm__farmer__user')
+        if user.is_superuser or role in ['ADMIN', 'EXPERT']:
+            return queryset.order_by('-created_at')
+        if role == 'FARMER':
+            return queryset.filter(soil_sample__farm__farmer__user=user).order_by('-created_at')
+        if role == 'LAB' and profile.is_verified:
+            return queryset.filter(soil_sample__source='LAB').order_by('-created_at')
+        return SoilAnalysis.objects.none()
+
     def get_permissions(self):
         permission_map = {
             'lab_register_sample': IsVerifiedLabSample,
@@ -297,6 +312,8 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
             'create_farm': IsAuthenticated,
             'lab_list_samples': IsLabOrExpert,
             'generate_pdf': IsAuthenticated,
+            'sample_details': IsAuthenticated,
+            'health_history': IsAuthenticated,
             'analyze_soil': IsAuthenticated,
             'expert_requests_list': IsAdminOrExpert,
             'accept_expert_request': IsAdminOrExpert,
@@ -319,6 +336,17 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
 
         try:
             farm = get_object_or_404(Farm, id=farm_id)
+            profile = getattr(request.user, 'profile', None)
+            role = profile.role if profile else None
+            if not (
+                request.user.is_superuser
+                or role in ['ADMIN', 'EXPERT']
+                or farm.farmer.user_id == request.user.id
+            ):
+                return Response(
+                    {'error': 'شما به تاریخچه این مزرعه دسترسی ندارید'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
             history = SoilHealthHistory.objects.filter(farm=farm).order_by('record_date')
 
             data = {
@@ -811,6 +839,18 @@ class SoilAnalysisViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['get'], url_path='details')
     def sample_details(self, request, pk=None):
         sample = get_object_or_404(SoilSample, pk=pk)
+        profile = getattr(request.user, 'profile', None)
+        role = profile.role if profile else None
+        if not (
+            request.user.is_superuser
+            or role in ['ADMIN', 'EXPERT']
+            or sample.farm.farmer.user_id == request.user.id
+            or (role == 'LAB' and profile.is_verified and sample.source == 'LAB')
+        ):
+            return Response(
+                {'error': 'شما به این نمونه دسترسی ندارید'},
+                status=status.HTTP_403_FORBIDDEN
+            )
         serializer = SoilSampleSerializer(sample)
 
         data = serializer.data
