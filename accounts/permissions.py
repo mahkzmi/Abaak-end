@@ -1,62 +1,67 @@
 from rest_framework.permissions import BasePermission
 
 
+def _profile(request):
+    if not request.user.is_authenticated:
+        return None
+    return getattr(request.user, 'profile', None)
+
+
 class IsAdmin(BasePermission):
-    """فقط کاربران با نقش ADMIN"""
     def has_permission(self, request, view):
-        return request.user.is_authenticated and hasattr(request.user, 'profile') and request.user.profile.role == 'ADMIN'
+        profile = _profile(request)
+        return bool(request.user.is_authenticated and (request.user.is_superuser or (profile and profile.role == 'ADMIN')))
 
 
 class IsExpert(BasePermission):
-    """فقط کاربران با نقش EXPERT"""
     def has_permission(self, request, view):
-        return request.user.is_authenticated and hasattr(request.user, 'profile') and request.user.profile.role == 'EXPERT'
+        profile = _profile(request)
+        return bool(request.user.is_authenticated and (request.user.is_superuser or (profile and profile.role == 'EXPERT')))
 
 
 class IsLab(BasePermission):
-    """فقط کاربران با نقش LAB"""
     def has_permission(self, request, view):
-        return request.user.is_authenticated and hasattr(request.user, 'profile') and request.user.profile.role == 'LAB'
+        profile = _profile(request)
+        return bool(request.user.is_authenticated and profile and profile.role == 'LAB' and profile.is_verified)
 
 
 class IsFarmer(BasePermission):
-    """فقط کاربران با نقش FARMER"""
     def has_permission(self, request, view):
-        return request.user.is_authenticated and hasattr(request.user, 'profile') and request.user.profile.role == 'FARMER'
+        profile = _profile(request)
+        return bool(request.user.is_authenticated and profile and profile.role == 'FARMER')
 
 
 class IsAdminOrExpert(BasePermission):
-    """کاربران با نقش ADMIN یا EXPERT"""
     def has_permission(self, request, view):
-        if not request.user.is_authenticated or not hasattr(request.user, 'profile'):
-            return False
-        return request.user.profile.role in ['ADMIN', 'EXPERT']
+        profile = _profile(request)
+        return bool(request.user.is_authenticated and (request.user.is_superuser or (profile and profile.role in ['ADMIN', 'EXPERT'])))
 
 
 class IsLabOrExpert(BasePermission):
-    """کاربران با نقش LAB یا EXPERT"""
     def has_permission(self, request, view):
-        if not request.user.is_authenticated or not hasattr(request.user, 'profile'):
-            return False
-        return request.user.profile.role in ['LAB', 'EXPERT']
+        profile = _profile(request)
+        if request.user.is_superuser:
+            return True
+        return bool(profile and (profile.role == 'EXPERT' or (profile.role == 'LAB' and profile.is_verified)))
 
 
 class IsOwnerOrReadOnly(BasePermission):
-    """فقط مالک می‌تواند تغییر دهد، بقیه فقط می‌توانند بخوانند"""
     def has_object_permission(self, request, view, obj):
         if request.method in ['GET', 'HEAD', 'OPTIONS']:
             return True
-        # بررسی اینکه کاربر مالک است
         if hasattr(obj, 'farmer') and hasattr(obj.farmer, 'user'):
-            return obj.farmer.user == request.user
+            return obj.farmer.user_id == request.user.id
         if hasattr(obj, 'user'):
-            return obj.user == request.user
+            return obj.user_id == request.user.id
         return False
 
 
 class IsVerifiedLabSample(BasePermission):
-    """فقط کاربران با نقش LAB می‌توانند نمونه ثبت کنند"""
     def has_permission(self, request, view):
-        if not request.user.is_authenticated or not hasattr(request.user, 'profile'):
-            return False
-        return request.user.profile.role in ['LAB', 'ADMIN', 'EXPERT']
+        profile = _profile(request)
+        if request.user.is_superuser:
+            return True
+        return bool(profile and (
+            profile.role in ['ADMIN', 'EXPERT']
+            or (profile.role == 'LAB' and profile.is_verified)
+        ))
