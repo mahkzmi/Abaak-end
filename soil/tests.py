@@ -69,6 +69,8 @@ class GenericFarmCreationSecurityTests(TestCase):
         force_authenticate(request, user=user)
 
         view = FarmViewSet()
+        # ViewSet.initialize_request expects the action map normally supplied by .as_view().
+        view.action_map = {'post': 'create'}
         view.request = view.initialize_request(request)
 
         with self.assertRaises(PermissionDenied):
