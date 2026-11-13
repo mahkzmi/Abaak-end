@@ -187,6 +187,11 @@ class SoilSampleViewSet(viewsets.ModelViewSet):
     serializer_class = SoilSampleSerializer
     permission_classes = [IsAuthenticated]
 
+    def get_permissions(self):
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return [IsAdminOrExpert()]
+        return [IsAuthenticated()]
+
     def get_queryset(self):
         user = self.request.user
         profile = getattr(user, 'profile', None)
@@ -234,9 +239,10 @@ class FarmViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
-        if user.is_superuser:
-            from rest_framework.exceptions import ValidationError
-            raise ValidationError('ثبت مزرعه برای مدیر باید از مسیر مدیریتی انجام شود.')
+        profile = getattr(user, 'profile', None)
+        if not profile or profile.role != 'FARMER':
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('فقط حساب کشاورز مجاز به ثبت مزرعه است.')
         try:
             farmer = user.farmer_profile
         except Farmer.DoesNotExist:
