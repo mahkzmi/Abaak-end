@@ -252,7 +252,6 @@ AXES_COOLOFF_TIME = 60 * 60  # ۱ ساعت
 AXES_LOCKOUT_PARAMETERS = ['ip_address', 'username']
 
 # تنظیمات دیگر
-AXES_LOGGER = 'axes.watch'
 AXES_RESET_ON_SUCCESS = True
 AXES_VERBOSE = True
 
