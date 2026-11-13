@@ -1,9 +1,11 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
 from rest_framework.test import APIRequestFactory, force_authenticate
+from rest_framework.exceptions import PermissionDenied
+from unittest.mock import Mock
 
 from accounts.models import UserProfile
-from .views import SoilAnalysisViewSet
+from .views import FarmViewSet, SoilAnalysisViewSet, SoilSampleViewSet
 
 
 class FarmCreationSecurityTests(TestCase):
@@ -46,3 +48,28 @@ class DirectAnalysisWriteSecurityTests(TestCase):
             permissions = view.get_permissions()
             self.assertEqual(len(permissions), 1)
             self.assertEqual(permissions[0].__class__.__name__, 'IsAdminOrExpert')
+
+
+
+class SoilSampleMutationSecurityTests(TestCase):
+    def test_sample_edits_and_deletes_require_admin_or_expert(self):
+        view = SoilSampleViewSet()
+        for action_name in ('update', 'partial_update', 'destroy'):
+            view.action = action_name
+            permissions = view.get_permissions()
+            self.assertEqual(len(permissions), 1)
+            self.assertEqual(permissions[0].__class__.__name__, 'IsAdminOrExpert')
+
+
+class GenericFarmCreationSecurityTests(TestCase):
+    def test_non_farmer_role_cannot_create_farm_even_with_request(self):
+        user = User.objects.create_user(username='non-farmer-farm-api', password='test-password')
+        UserProfile.objects.create(user=user, role='VIEWER', phone='09120000013')
+        request = APIRequestFactory().post('/api/farms/', {}, format='json')
+        force_authenticate(request, user=user)
+
+        view = FarmViewSet()
+        view.request = request
+
+        with self.assertRaises(PermissionDenied):
+            view.perform_create(Mock())
