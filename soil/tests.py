@@ -69,7 +69,7 @@ class GenericFarmCreationSecurityTests(TestCase):
         force_authenticate(request, user=user)
 
         view = FarmViewSet()
-        view.request = request
+        view.request = view.initialize_request(request)
 
         with self.assertRaises(PermissionDenied):
             view.perform_create(Mock())
