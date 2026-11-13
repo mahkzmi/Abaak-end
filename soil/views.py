@@ -222,11 +222,27 @@ class FarmViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
+        profile = getattr(user, 'profile', None)
+        role = profile.role if profile else None
+        if user.is_superuser or role in ['ADMIN', 'EXPERT']:
+            return Farm.objects.all().order_by('-created_at')
         try:
             farmer = user.farmer_profile
             return Farm.objects.filter(farmer=farmer).order_by('-created_at')
         except (AttributeError, Farmer.DoesNotExist):
             return Farm.objects.none()
+
+    def perform_create(self, serializer):
+        user = self.request.user
+        if user.is_superuser:
+            from rest_framework.exceptions import ValidationError
+            raise ValidationError('ثبت مزرعه برای مدیر باید از مسیر مدیریتی انجام شود.')
+        try:
+            farmer = user.farmer_profile
+        except Farmer.DoesNotExist:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied('حساب کاربری به پروفایل کشاورز متصل نیست.')
+        serializer.save(farmer=farmer)
 
     @action(detail=True, methods=['put'], url_path='update')
     def update_farm(self, request, pk=None):
